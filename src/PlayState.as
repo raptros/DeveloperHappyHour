@@ -22,7 +22,9 @@ package
             tapperPositions = new Array();
             mugPositions = new Array();
             
-            bars[0] = new FlxRect(10, 120, 380, 10);
+            bars[0] = new FlxRect(10, 50, 380, 10);
+            bars[1] = new FlxRect(10, 110, 380, 10);
+            bars[2] = new FlxRect(10, 170, 380, 10);
             
             var barShow:FlxSprite;
             for (var i:int = 0; i < bars.length; i++)
@@ -51,7 +53,7 @@ package
             var curMugs:FlxGroup = barMugs[barNum];
 
             //Handle input.
-            if (FlxG.keys.justPressed("SPACE"))
+            if (FlxG.keys.justPressed("SPACE")) 
             {
                 //chuck a mug from the current position.
                 var mug:BeerMug = curMugs.getFirstAvail() as BeerMug;
@@ -65,6 +67,25 @@ package
                 mug.velocity.x = -200;
                 mug.velocity.y = 0;
             }
+            else if (FlxG.keys.justPressed("UP"))
+            {
+                barNum--;
+                if (barNum < 0)
+                    barNum = bars.length - 1;
+                player.x = tapperPositions[barNum].x;
+                player.y = tapperPositions[barNum].y;
+            }
+            else if (FlxG.keys.justPressed("DOWN"))
+            {
+                barNum++;
+                if (barNum >= bars.length)
+                    barNum = 0;
+                player.x = tapperPositions[barNum].x;
+                player.y = tapperPositions[barNum].y;
+            }
+            
+            //decide whether or not to add patrons
+            
 
             //check for collisions between mugs and patrons?
 
