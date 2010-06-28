@@ -4,7 +4,7 @@ package
 
     public class PlayState extends FlxState
     {
-        private var playerStart:FlxPoint = new FlxPoint(310, 120);
+        private var playerStart:FlxPoint = new FlxPoint(390, 120);
         private var _player:Player;
         private var _mugs:FlxGroup;
 

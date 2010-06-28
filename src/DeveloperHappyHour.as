@@ -8,12 +8,12 @@ package
 
     import org.flixel.*;
 
-    [SWF(width="320", height="240", backgroundColor="#000000")];
+    [SWF(width="800", height="480", backgroundColor="#000000")];
     [Frame(factoryClass="Preloader")];
 
 	public class DeveloperHappyHour extends FlxGame
 	{
-        public static var WIDTH:int = 320, HEIGHT:int = 240;
+        public static var WIDTH:int = 400, HEIGHT:int = 240;
 
 		public function DeveloperHappyHour()
 		{
