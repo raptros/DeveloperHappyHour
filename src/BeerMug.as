@@ -6,33 +6,37 @@ package
     {
         public static var COLOR:uint = 0xff0000;
         public var startPos:FlxPoint;
+        public static var SIZE:Number = 10;
 
-        public function BeerMug(initX:Number, initY:Number)
+        private var leftB:Number;
+        private var rightB:Number;
+
+        public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {
             super(initX, initY);
-            createGraphic(5,5);
+            createGraphic(SIZE, SIZE);
             color = COLOR;
 
-            startPos = new FlxPoint(initX, initY);
+            leftB = leftBound;
+            rightB = rightBound;
 
+            startPos = new FlxPoint(initX, initY);
+            
             exists = false;
         }
 
-        public function throwMug():void
+        public function prepare():void
         { 
             reset(startPos.x, startPos.y);
-            velocity.x = -200;
-            velocity.y = 0;
         }
 
         override public function update():void
         {
             super.update();
-            if (!onScreen())
-            {
-
+            if (x < leftB)
                 kill();
-            }
+            else if (x > rightB)
+                kill();
         }
         
 
