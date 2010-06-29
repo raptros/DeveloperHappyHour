@@ -16,7 +16,6 @@ package
         public var pushbackComplete:Function;
         public var mugged:Function;
 
-        public var whichBar:Number; //needed only by playstate
 
         public var targetX:Number;
         public var inPushBack:Boolean = false;

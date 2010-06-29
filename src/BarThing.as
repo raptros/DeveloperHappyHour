@@ -11,6 +11,9 @@ package
         private var leftB:Number;
         private var rightB:Number;
 
+        public var whichBar:Number; //needed only by playstate
+        public var onDieLeft:Function, onDieRight:Function;
+
         public function BarThing(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {
             super(initX, initY);
@@ -35,18 +38,22 @@ package
             if (x < leftB)
                 dieLeft();
             else if (right > rightB)
-                dieLeft();
+                dieRight();
             super.update();
         }
 
         public function dieLeft():void
         {
             kill();
+            if (onDieLeft != null)
+                onDieLeft(this);
         }
         
         public function dieRight():void
         {
             kill();
+            if (onDieRight != null)
+                onDieRight(this);
         }
 
     }

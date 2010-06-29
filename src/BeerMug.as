@@ -12,6 +12,7 @@ package
         public static var COLOR2:uint = 0xffff00;
         public static var SIZE:Number = 10;
 
+
         public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {
             super(initX, initY, leftBound, rightBound);
@@ -19,5 +20,6 @@ package
             collideRight = false;
             collideLeft = true;
         }
+
     }
 }

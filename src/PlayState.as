@@ -8,10 +8,15 @@ package
         public static var patronSpeed:Number = 5; 
         public static var pushBack:Number = 20; //pixels
         public static var patronGap:Number = 10.0; //seconds
+        public static var maxPatrons:Number = 4;
 
 
         private var barNum:Number = 0;
         private var countDown:Number;
+
+        private var scoreDisp:FlxText;
+
+        private var scoreString:String;
 
         private var bars:Array;
         private var barMugs:Array;
@@ -19,6 +24,9 @@ package
         private var tapperPositions:Array;
         private var mugPositions:Array;
         private var patronPositions:Array;
+
+        private var mugsOnLeft:Number = 0, mugsOnRight:Number = 0;
+        private var patronsOut:Number = 0, patronsUnstopped:Number = 0;
 
         private var player:Player;
 
@@ -30,6 +38,9 @@ package
             FlxG.mouse.show();
 
             countDown = 0; //so that they come right away.
+            updateScoreString();
+            scoreDisp = new FlxText(1, 1, 390, scoreString);
+            add(scoreDisp);
             
             //arrays that contain information about the bars and their
             //locations and object groups.
@@ -69,6 +80,8 @@ package
 
         override public function update():void
         {
+            scoreDisp.text = scoreString;
+            
             super.update();
 
             var curBar:FlxRect = bars[barNum];
@@ -86,6 +99,9 @@ package
                 if (!mug)
                 {   //no available mugs-create a new one
                     mug = new BeerMug(pos.x, pos.y, curBar.left, curBar.right);
+                    mug.whichBar = barNum;
+                    mug.onDieLeft = mugDroppedLeft;
+                    mug.onDieRight = mugDroppedRight;
                     curMugs.add(mug);
                 }
                 else
@@ -134,7 +150,7 @@ package
                 curPatrons = barPatrons[i];
 
                 //flip coin, add a patron if yes.
-                if (patronTime)
+                if (patronTime && curPatrons.countOnScreen() <= maxPatrons)
                 {
                     flip = Math.random();
                     if (flip > 0.5)
@@ -149,6 +165,8 @@ package
                             patron.pushbackComplete = pushbackComplete;
                             patron.mugged = patronMugged;
                             patron.whichBar = i;
+                            patron.onDieLeft = patronPushedOut;
+                            patron.onDieRight = patronAttacks;
                             curPatrons.add(patron);
                         }
                         else
@@ -215,6 +233,9 @@ package
             if (!mug)
             {
                 mug = new BeerMug(pos.x, pos.y, curBar.left, curBar.right);
+                mug.whichBar = patron.whichBar;
+                mug.onDieLeft = mugDroppedLeft;
+                mug.onDieRight = mugDroppedRight;
                 curMugs.add(mug);
             }
             else
@@ -225,6 +246,50 @@ package
 
             patron.collideRight = true;
             patron.inPushBack = false;
+        }
+
+        /**
+         * always lose in this case.
+         */
+        public function mugDroppedLeft(mug:BeerMug):void
+        {
+            mugsOnLeft++;
+            updateScoreString();
+        }
+
+        /**
+         * only lose if player isn't at that bar.
+         */
+        public function mugDroppedRight(mug:BeerMug):void
+        {
+            if (barNum != mug.whichBar)
+            {
+                mugsOnRight++;
+                updateScoreString();
+            }
+        }
+
+        /**
+        * never causes lose. it is a good thing.
+        */
+        public function patronPushedOut(patron:Patron):void
+        {
+            patronsOut++;
+            updateScoreString();
+        }
+
+        /**
+         * always lose in this case.
+         */
+        public function patronAttacks(patron:Patron):void
+        {
+            patronsUnstopped++;
+            updateScoreString();
+        }
+
+        public function updateScoreString():void
+        {
+            scoreString = "full mugs lost: " + mugsOnLeft + " empty mugs lost: " + mugsOnRight + " patrons out: " + patronsOut + " patrons unstopped: " + patronsUnstopped;
         }
     }
 }
