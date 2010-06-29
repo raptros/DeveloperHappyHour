@@ -8,7 +8,7 @@ package
         public static var patronSpeed:Number = 5; 
         public static var pushBack:Number = 20; //pixels
         public static var patronGap:Number = 10.0; //seconds
-        public static var maxPatrons:Number = 4;
+        public static var maxPatrons:Number = 2;
 
 
         private var barNum:Number = 0;
@@ -150,7 +150,7 @@ package
                 curPatrons = barPatrons[i];
 
                 //flip coin, add a patron if yes.
-                if (patronTime && curPatrons.countOnScreen() <= maxPatrons)
+                if (patronTime && curPatrons.countLiving() <= maxPatrons)
                 {
                     flip = Math.random();
                     if (flip > 0.5)
