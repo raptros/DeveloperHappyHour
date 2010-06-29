@@ -32,11 +32,11 @@ package
 
         override public function update():void
         {
-            super.update();
             if (x < leftB)
                 dieLeft();
-            else if (x > rightB)
+            else if (right > rightB)
                 dieLeft();
+            super.update();
         }
 
         public function dieLeft():void
