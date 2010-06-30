@@ -12,6 +12,7 @@ package
         public static var COLOR2:uint = 0xffff00;
         public static var SIZE:Number = 10;
 
+        public var full:Boolean;
 
         public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {

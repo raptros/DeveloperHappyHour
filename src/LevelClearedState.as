@@ -15,8 +15,11 @@ package
         {
             FlxG.mouse.show();
             
-            congrats = new FlxText(0, 120, 400, "You cleared the level of " + cleared + " patrons!");
+            congrats = new FlxText(0, 10, 400, "You cleared level " + FlxG.level + " of " + cleared + " patrons!");
             congrats.setFormat(null, 10, 0xffffff, "center", 0);
+
+            //var b:FlxButton = new FlxButton(
+
             add(congrats);
         }
 
@@ -28,7 +31,12 @@ package
             }
             super.update();
         }
-            
-            
+        
+
+        public function nextLevel():void
+        {
+            FlxG.state = new PlayState(FlxG.levels[FlxG.level]);
+        }
+
     }
 }

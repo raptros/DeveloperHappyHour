@@ -4,10 +4,14 @@ package
 
     public class PlayState extends FlxState
     {
-        public static var mugSpeed:Number = 100;
-        public static var patronSpeed:Number = 5; 
-        public static var pushBack:Number = 20; //pixels
-        public static var patronGap:Number = 10.0; //seconds
+        private var playerStep:Number = 2;
+        private var mugSpeed:Number = 100;
+    
+        private var maxPatrons:Number;
+        private var patronsToClear:Number;
+        private var patronSpeed:Number; 
+        private var pushBack:Number; //pixels
+        private var patronGap:Number; //seconds
 
         private var barNum:Number = 0;
         private var countDown:Number;
@@ -23,8 +27,6 @@ package
         private var mugPositions:Array;
         private var patronPositions:Array;
 
-        private var maxPatrons:Number;
-        private var patronsToClear:Number;
 
         private var mugsOnLeft:Number = 0, mugsOnRight:Number = 0;
         private var patronsOut:Number = 0, patronsUnstopped:Number = 0;
@@ -37,11 +39,14 @@ package
 
         private var player:Player;
 
-        public function PlayState(maxPerBar:Number, numToClear:Number)
+        public function PlayState(ls:LevelSettings)
         {
             super();
-            maxPatrons = maxPerBar;
-            patronsToClear = numToClear;
+            maxPatrons = ls.maxPatrons;
+            patronsToClear = ls.patronsToClear;
+            patronSpeed = ls.patronSpeed;
+            pushBack = ls.pushBack;
+            patronGap = ls.patronGap;
         }
 
         /**
@@ -85,7 +90,7 @@ package
                 barPatrons[i] = new FlxGroup();
                 add(barPatrons[i]);
                 
-                tapperPositions[i] = new FlxPoint(bars[i].right, bars[i].bottom);
+                tapperPositions[i] = new FlxPoint(bars[i].right, bars[i].top);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top);
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top);
             }
@@ -127,10 +132,11 @@ package
             var curBar:FlxRect = bars[barNum];
             var curMugs:FlxGroup = barMugs[barNum];
             var curPatrons:FlxGroup = barPatrons[barNum];
+            var curBase:FlxPoint = tapperPositions[barNum];
             var pos:FlxPoint;
 
             //Handle input.
-            if (FlxG.keys.justPressed("SPACE")) 
+            if (FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y) 
             {
                 //chuck a mug from the current position. reuse available mug objects
                 //by checking with the mug group.
@@ -149,6 +155,7 @@ package
                     mug.color = BeerMug.COLOR1;
                     mug.startPos = pos;
                 }
+                mug.full = true;
                 mug.prepare();
                 mug.velocity.x = -1*mugSpeed; //send it to the left
                 mug.velocity.y = 0;
@@ -170,7 +177,20 @@ package
                 player.x = tapperPositions[barNum].x;
                 player.y = tapperPositions[barNum].y;
             }
-            
+            //move player left or right along bar
+            else if (FlxG.keys.LEFT && player.x > curBar.left)
+            {
+                player.x -= playerStep;
+                                
+            }
+            else if (FlxG.keys.RIGHT && player.x < curBar.right)
+            {
+                player.x += playerStep;
+            }
+
+            //check overlap of player and empty mugs
+            FlxU.overlap(player, curMugs, playerMugged);
+
             //take a look at the countdown
             var patronTime:Boolean = false;
             var flip:Number;
@@ -281,6 +301,7 @@ package
             }
             else
                 mug.startPos = pos;
+            mug.full = false;
             mug.color = BeerMug.COLOR2;
             mug.prepare();
             mug.velocity.x = mugSpeed / 2;
@@ -336,6 +357,13 @@ package
         public function updateScoreString():void
         {
             scoreString = "full mugs lost: " + mugsOnLeft + " empty mugs lost: " + mugsOnRight + " patrons out: " + patronsOut + " patrons unstopped: " + patronsUnstopped;
+        }
+
+        public function playerMugged(playerObj:FlxObject, mugObj:FlxObject):void
+        {
+            var mug:BeerMug = mugObj as BeerMug;
+            if (mug != null && !mug.full)
+                mug.kill();
         }
     }
 }

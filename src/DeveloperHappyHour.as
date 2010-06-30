@@ -18,6 +18,7 @@ package
 		public function DeveloperHappyHour()
 		{
             super(WIDTH, HEIGHT, StartGameState);
+            FlxG.levels.push(new LevelSettings());
 		}
 
 	}

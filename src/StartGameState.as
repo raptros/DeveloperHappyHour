@@ -10,7 +10,7 @@ package
         override public function create():void
         {
             FlxG.mouse.show();
-
+            FlxG.level = 0;
             title = new FlxText(0, 60, 400, "Developer Happy Hour");
             title.setFormat(null, 12, 0xffffff, "center", 0);
             add(title);
@@ -24,7 +24,7 @@ package
         {
             if (FlxG.mouse.justReleased()) 
             {
-                FlxG.state = new PlayState(1, 10);
+                FlxG.state = new PlayState(FlxG.levels[FlxG.level]);
             }
             super.update();
         }

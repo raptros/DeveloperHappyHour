@@ -7,7 +7,7 @@ package
         public function Player(pos:FlxPoint)
         {
             super(pos.x, pos.y);
-            createGraphic(10,10);
+            createGraphic(10,20);
             color = 0x0000ff;
         }
 
