@@ -8,8 +8,6 @@ package
         public static var patronSpeed:Number = 5; 
         public static var pushBack:Number = 20; //pixels
         public static var patronGap:Number = 10.0; //seconds
-        public static var maxPatrons:Number = 2;
-
 
         private var barNum:Number = 0;
         private var countDown:Number;
@@ -25,23 +23,42 @@ package
         private var mugPositions:Array;
         private var patronPositions:Array;
 
+        private var maxPatrons:Number;
+        private var patronsToClear:Number;
+
         private var mugsOnLeft:Number = 0, mugsOnRight:Number = 0;
         private var patronsOut:Number = 0, patronsUnstopped:Number = 0;
 
+        private var freezer:Number;
+        private var frozen:Boolean=false;
+
+        private var lives:Number;
+        private var lifeCounter:FlxText;
+
         private var player:Player;
+
+        public function PlayState(maxPerBar:Number, numToClear:Number)
+        {
+            super();
+            maxPatrons = maxPerBar;
+            patronsToClear = numToClear;
+        }
 
         /**
          * sets up the place.
          */
         override public function create():void
         {
-            FlxG.mouse.show();
+            FlxG.mouse.hide();
+
+            //set life count
+            lives = 3;
+            lifeCounter = new FlxText(350, 10, 40, lives.toString());
+            lifeCounter.setFormat(null, 8, 0xffffff, "right");
+            add(lifeCounter);
 
             countDown = 0; //so that they come right away.
-            updateScoreString();
-            scoreDisp = new FlxText(1, 1, 390, scoreString);
-            add(scoreDisp);
-            
+
             //arrays that contain information about the bars and their
             //locations and object groups.
             bars = new Array();
@@ -80,8 +97,31 @@ package
 
         override public function update():void
         {
-            scoreDisp.text = scoreString;
+            //make sure text displays are up to date
+            lifeCounter.text = lives.toString();
             
+            //test for level clear.
+            if (patronsToClear <= patronsOut)
+            {
+                FlxG.state = new LevelClearedState(patronsOut);
+            }
+
+            //test for frozen (stops animations except one)
+            if (frozen)
+            {
+                freezer -= FlxG.elapsed;
+                if (freezer <= 0)
+                    frozen = false;
+                return ;
+            }
+
+            //test for game over
+            if (lives <= 0)
+            {
+                FlxG.state = new GameOverState();
+            }
+
+            //IMPORTANT.
             super.update();
 
             var curBar:FlxRect = bars[barNum];
@@ -149,9 +189,10 @@ package
                 curMugs = barMugs[i];
                 curPatrons = barPatrons[i];
 
-                //flip coin, add a patron if yes.
-                if (patronTime && curPatrons.countLiving() <= maxPatrons)
+                //see if we can add a patron at this time.
+                if (patronTime && curPatrons.countLiving() < maxPatrons)
                 {
+                    //flip coin, add a patron if yes.
                     flip = Math.random();
                     if (flip > 0.5)
                     {
@@ -254,7 +295,9 @@ package
         public function mugDroppedLeft(mug:BeerMug):void
         {
             mugsOnLeft++;
-            updateScoreString();
+            lives--;
+            frozen = true;
+            freezer = 1.0;
         }
 
         /**
@@ -265,7 +308,9 @@ package
             if (barNum != mug.whichBar)
             {
                 mugsOnRight++;
-                updateScoreString();
+                lives--;
+                frozen = true;
+                freezer = 1.0;
             }
         }
 
@@ -275,7 +320,6 @@ package
         public function patronPushedOut(patron:Patron):void
         {
             patronsOut++;
-            updateScoreString();
         }
 
         /**
@@ -284,7 +328,9 @@ package
         public function patronAttacks(patron:Patron):void
         {
             patronsUnstopped++;
-            updateScoreString();
+            lives--;
+            frozen = true;
+            freezer = 1.0;
         }
 
         public function updateScoreString():void

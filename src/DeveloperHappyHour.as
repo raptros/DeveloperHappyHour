@@ -17,7 +17,7 @@ package
 
 		public function DeveloperHappyHour()
 		{
-            super(WIDTH, HEIGHT, PlayState);
+            super(WIDTH, HEIGHT, StartGameState);
 		}
 
 	}
