@@ -354,11 +354,13 @@ package
             freezer = 1.0;
         }
 
+        //not used
         public function updateScoreString():void
         {
             scoreString = "full mugs lost: " + mugsOnLeft + " empty mugs lost: " + mugsOnRight + " patrons out: " + patronsOut + " patrons unstopped: " + patronsUnstopped;
         }
-
+        
+        //allows player to collect empty mugs.
         public function playerMugged(playerObj:FlxObject, mugObj:FlxObject):void
         {
             var mug:BeerMug = mugObj as BeerMug;
