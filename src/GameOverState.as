@@ -2,6 +2,9 @@ package
 {
     import org.flixel.*;
     
+    /**
+     * To be displayed after running out of lives.
+     */
     public class GameOverState extends FlxState
     {
         private var over:FlxText;

@@ -4,27 +4,31 @@ package
 
     public class PlayState extends FlxState
     {
+        //speeds
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
 
+        //points for events
         private var giveMugPoints:Number = 1;
         private var collectMugPoints:Number = 2;
         private var pushOutPatronPoints:Number = 5;
         private var collectMoneyPoints:Number = 10;
     
+        //level settings
         private var maxPatrons:Number;
         private var patronsToClear:Number;
         private var patronSpeed:Number; 
         private var pushBack:Number; //pixels
         private var patronGap:Number; //seconds
         private var whenMoney:Number;
-
+        
+        //position
         private var barNum:Number = 0;
+        
+        //time till next wave
         private var countDown:Number;
 
-
-        private var scoreString:String;
-
+        //arrays holding data for each bar
         private var bars:Array;
         private var barMugs:Array;
         private var barPatrons:Array;
@@ -33,18 +37,24 @@ package
         private var mugPositions:Array;
         private var patronPositions:Array;
 
+        //counters
         private var patronsOut:Number = 0;
         private var mugsGiven:Number = 0;
+        private var lives:Number;
 
+        //animation freeze for dropping something
         private var freezer:Number;
         private var frozen:Boolean=false;
-
-        private var lives:Number;
+        
+        //displays
         private var lifeCounter:FlxText;
         private var scoreDisp:FlxText;
 
         private var player:Player;
 
+        /**
+         * get all the settings for the level to be played.
+         */
         public function PlayState(ls:LevelSettings)
         {
             super();
@@ -146,11 +156,12 @@ package
             //IMPORTANT.
             super.update();
 
+            //get references from the arrays.
             var curBar:FlxRect = bars[barNum];
             var curMugs:FlxGroup = barMugs[barNum];
             var curPatrons:FlxGroup = barPatrons[barNum];
-            var curMoney:FlxGroup = moneyOnBars[barNum];
             var curBase:FlxPoint = tapperPositions[barNum];
+
             var pos:FlxPoint;
 
             //Handle input.
@@ -209,6 +220,9 @@ package
             //check overlap of player and empty mugs
             FlxU.overlap(player, curMugs, playerMugged);
 
+            //check for overlap between player and money.
+            FlxU.overlap(player, moneyOnBars[barNum], moneyCollect);
+
             //take a look at the countdown
             var patronTime:Boolean = false;
             var flip:Number;
@@ -239,7 +253,7 @@ package
                         pos = patronPositions[i];
                         var patron:Patron = curPatrons.getFirstAvail() as Patron;
                         if (!patron)
-                        {//there isn't one available, so make a new one with right props
+                        {   //there isn't one available, so make a new one with right props
                             patron = new Patron(pos.x, pos.y, curBar.left, curBar.right);
                             patron.pushbackComplete = pushbackComplete;
                             patron.mugged = patronMugged;
@@ -249,7 +263,7 @@ package
                             curPatrons.add(patron);
                         }
                         else
-                        {//get the one we found set up right.
+                        {   //get the one we found set up right.
                             patron.inPushBack = false;
                             patron.startPos = pos;
                             patron.color = Patron.COLOR1;
@@ -264,8 +278,6 @@ package
                 //check for collisions between mugs and patrons
                 //FlxU.overlap(curMugs, curPatrons, patronMugged);
                 FlxU.collide(curMugs, curPatrons);
-                
-                FlxU.overlap(player, curMoney, moneyCollect);
             }
 
         }
@@ -308,6 +320,8 @@ package
         {
             patron.color = Patron.COLOR1;
             patron.velocity.x = patronSpeed;
+            
+            //we'll need these references soon.
             var curBar:FlxRect = bars[patron.whichBar];
             var curMugs:FlxGroup = barMugs[patron.whichBar];
             var curMoney:FlxGroup = moneyOnBars[patron.whichBar];
@@ -331,6 +345,7 @@ package
             mug.prepare();
             mug.velocity.x = mugSpeed / 2;
             
+            pos.x = patron.x;
             //check up on dropping money
             if (mugsGiven >= whenMoney)
             {
@@ -395,7 +410,9 @@ package
             freezer = 1.0;
         }
 
-        //allows player to collect empty mugs.
+        /**
+         * allows player to collect empty mugs. it's a callback for FlxU.overlap
+         */
         public function playerMugged(playerObj:FlxObject, mugObj:FlxObject):void
         {
             var mug:BeerMug = mugObj as BeerMug;
@@ -406,7 +423,9 @@ package
             }
         }
 
-        //money collect!
+        /**
+         * allows player to collect money. it's a callback for FlxU.overlap
+         */
         public function moneyCollect(playerObj:FlxObject, moneyObj:FlxObject):void
         {
             FlxG.score += collectMoneyPoints;

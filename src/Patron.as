@@ -78,12 +78,16 @@ package
         override public function dieLeft():void
         {
             super.dieLeft();
+            //we need these so that this doesn't screw up if reused.
             isMoving = false;
             isAnimating = false;
             inPushBack = false;
             collideRight = true;
         }
 
+        /**
+         * a beermug made contact with this.
+         */
         override public function hitRight(c:FlxObject, v:Number):void
         {
             var mug:BeerMug = c as BeerMug;

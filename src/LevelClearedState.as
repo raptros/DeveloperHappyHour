@@ -1,6 +1,9 @@
 package
 {
     import org.flixel.*;
+    /**
+     * to be displayed upon clearing a level of the appropriate number of patrons.
+     */
     public class LevelClearedState extends FlxState
     {
         private var cleared:Number;
@@ -15,7 +18,13 @@ package
         {
             super.update();
         }
-
+        
+        /**
+         * This only looks messy. It's actually quite straightforward: create two buttons.
+         * Each button has a black background, and two texts, one grey, one white.
+         * The gray one is default, the white one is for mouse over. one button is only 
+         * created if there are still levels available.
+         */
         override public function create():void
         {
             FlxG.mouse.show();
@@ -48,11 +57,17 @@ package
 
         }
 
+        /**
+         * callback for next level button
+         */
         public function nextLevel():void
         {
             FlxG.state = new PlayState(FlxG.levels[FlxG.level]);
         }
 
+        /**
+         * callback for quit game button
+         */
         public function quitGame():void
         {
             FlxG.state = new StartGameState();
