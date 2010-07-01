@@ -6,36 +6,42 @@ package
     {
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
+
+        private var giveMugPoints:Number = 1;
+        private var collectMugPoints:Number = 2;
+        private var pushOutPatronPoints:Number = 5;
+        private var collectMoneyPoints:Number = 10;
     
         private var maxPatrons:Number;
         private var patronsToClear:Number;
         private var patronSpeed:Number; 
         private var pushBack:Number; //pixels
         private var patronGap:Number; //seconds
+        private var whenMoney:Number;
 
         private var barNum:Number = 0;
         private var countDown:Number;
 
-        private var scoreDisp:FlxText;
 
         private var scoreString:String;
 
         private var bars:Array;
         private var barMugs:Array;
         private var barPatrons:Array;
+        private var moneyOnBars:Array;
         private var tapperPositions:Array;
         private var mugPositions:Array;
         private var patronPositions:Array;
 
-
-        private var mugsOnLeft:Number = 0, mugsOnRight:Number = 0;
-        private var patronsOut:Number = 0, patronsUnstopped:Number = 0;
+        private var patronsOut:Number = 0;
+        private var mugsGiven:Number = 0;
 
         private var freezer:Number;
         private var frozen:Boolean=false;
 
         private var lives:Number;
         private var lifeCounter:FlxText;
+        private var scoreDisp:FlxText;
 
         private var player:Player;
 
@@ -47,6 +53,7 @@ package
             patronSpeed = ls.patronSpeed;
             pushBack = ls.pushBack;
             patronGap = ls.patronGap;
+            whenMoney = ls.whenMoney;
         }
 
         /**
@@ -58,9 +65,14 @@ package
 
             //set life count
             lives = 3;
-            lifeCounter = new FlxText(350, 10, 40, lives.toString());
+            lifeCounter = new FlxText(300, 10, 50, lives.toString());
             lifeCounter.setFormat(null, 8, 0xffffff, "right");
             add(lifeCounter);
+
+            //display scores
+            scoreDisp = new FlxText(0, 10, 50, FlxG.score.toString());
+            scoreDisp.setFormat(null, 8, 0xffffff, "right");
+            add(scoreDisp);
 
             countDown = 0; //so that they come right away.
 
@@ -69,6 +81,7 @@ package
             bars = new Array();
             barMugs = new Array();
             barPatrons = new Array();
+            moneyOnBars = new Array();
             tapperPositions = new Array();
             mugPositions = new Array();
             patronPositions = new Array();
@@ -90,6 +103,9 @@ package
                 barPatrons[i] = new FlxGroup();
                 add(barPatrons[i]);
                 
+                moneyOnBars[i] = new FlxGroup();
+                add(moneyOnBars[i]);
+
                 tapperPositions[i] = new FlxPoint(bars[i].right, bars[i].top);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top);
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top);
@@ -104,6 +120,7 @@ package
         {
             //make sure text displays are up to date
             lifeCounter.text = lives.toString();
+            scoreDisp.text = FlxG.score.toString();
             
             //test for level clear.
             if (patronsToClear <= patronsOut)
@@ -132,6 +149,7 @@ package
             var curBar:FlxRect = bars[barNum];
             var curMugs:FlxGroup = barMugs[barNum];
             var curPatrons:FlxGroup = barPatrons[barNum];
+            var curMoney:FlxGroup = moneyOnBars[barNum];
             var curBase:FlxPoint = tapperPositions[barNum];
             var pos:FlxPoint;
 
@@ -246,6 +264,8 @@ package
                 //check for collisions between mugs and patrons
                 //FlxU.overlap(curMugs, curPatrons, patronMugged);
                 FlxU.collide(curMugs, curPatrons);
+                
+                FlxU.overlap(player, curMoney, moneyCollect);
             }
 
         }
@@ -262,6 +282,10 @@ package
             //don't stop the mug if patron's already got one.
             if (patron.inPushBack)
                 return ;
+            //award points and stop patron and mug
+            FlxG.score += giveMugPoints;
+            mugsGiven++;
+
             mug.kill();
             patron.velocity.x = 0;
             patron.velocity.y = 0;
@@ -286,6 +310,7 @@ package
             patron.velocity.x = patronSpeed;
             var curBar:FlxRect = bars[patron.whichBar];
             var curMugs:FlxGroup = barMugs[patron.whichBar];
+            var curMoney:FlxGroup = moneyOnBars[patron.whichBar];
 
             var pos:FlxPoint = new FlxPoint(patron.right + 1, patron.y)
             // the only difference between this bit of code and the code for
@@ -305,6 +330,22 @@ package
             mug.color = BeerMug.COLOR2;
             mug.prepare();
             mug.velocity.x = mugSpeed / 2;
+            
+            //check up on dropping money
+            if (mugsGiven >= whenMoney)
+            {
+                mugsGiven = 0;
+                var money:Money = curMoney.getFirstAvail() as Money;
+                if (!money)
+                {
+                    money = new Money(pos.x, pos.y, curBar.left, curBar.right);
+                    money.whichBar = patron.whichBar;
+                    curMoney.add(money);
+                }
+                else
+                    money.startPos = pos;
+                money.prepare();
+            }
 
             patron.collideRight = true;
             patron.inPushBack = false;
@@ -315,7 +356,6 @@ package
          */
         public function mugDroppedLeft(mug:BeerMug):void
         {
-            mugsOnLeft++;
             lives--;
             frozen = true;
             freezer = 1.0;
@@ -326,9 +366,10 @@ package
          */
         public function mugDroppedRight(mug:BeerMug):void
         {
-            if (barNum != mug.whichBar)
+            if (barNum == mug.whichBar)
+                FlxG.score += collectMugPoints;
+            else
             {
-                mugsOnRight++;
                 lives--;
                 frozen = true;
                 freezer = 1.0;
@@ -341,6 +382,7 @@ package
         public function patronPushedOut(patron:Patron):void
         {
             patronsOut++;
+            FlxG.score += pushOutPatronPoints;
         }
 
         /**
@@ -348,24 +390,27 @@ package
          */
         public function patronAttacks(patron:Patron):void
         {
-            patronsUnstopped++;
             lives--;
             frozen = true;
             freezer = 1.0;
         }
 
-        //not used
-        public function updateScoreString():void
-        {
-            scoreString = "full mugs lost: " + mugsOnLeft + " empty mugs lost: " + mugsOnRight + " patrons out: " + patronsOut + " patrons unstopped: " + patronsUnstopped;
-        }
-        
         //allows player to collect empty mugs.
         public function playerMugged(playerObj:FlxObject, mugObj:FlxObject):void
         {
             var mug:BeerMug = mugObj as BeerMug;
             if (mug != null && !mug.full)
+            {
                 mug.kill();
+                FlxG.score += collectMugPoints;
+            }
+        }
+
+        //money collect!
+        public function moneyCollect(playerObj:FlxObject, moneyObj:FlxObject):void
+        {
+            FlxG.score += collectMoneyPoints;
+            moneyObj.kill();
         }
     }
 }

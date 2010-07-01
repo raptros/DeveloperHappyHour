@@ -20,7 +20,7 @@ package
         {
             FlxG.mouse.show();
             
-            congrats = new FlxText(0, 30, 400, "You cleared level " + FlxG.level + " of " + cleared + " patrons!");
+            congrats = new FlxText(0, 30, 400, "You cleared level " + FlxG.level + ". Your score is " + FlxG.score + ".");
             congrats.setFormat(null, 10, 0xffffff, "center", 0);
             add(congrats);
 

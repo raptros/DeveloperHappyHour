@@ -7,18 +7,21 @@ package
         public var patronGap:Number = 10.0; //seconds
         public var maxPatrons:Number = 1;
         public var patronsToClear:Number = 5;
+        public var whenMoney:Number = 3;
         
         public function LevelSettings(maxPatrons:Number=1,
                                       patronsToClear:Number=5,
                                       patronSpeed:Number=5,
                                       pushBack:Number=20,
-                                      patronGap:Number=10.0)
+                                      patronGap:Number=10.0,
+                                      whenMoney:Number=3)
         {
             this.maxPatrons = maxPatrons;
             this.patronsToClear = patronsToClear;
             this.patronSpeed = patronSpeed;
             this.pushBack = pushBack;
             this.patronGap = patronGap;
+            this.whenMoney=whenMoney;
         }
     }
 }

@@ -10,7 +10,7 @@ package
         {
             FlxG.mouse.show();
             
-            over = new FlxText(0, 120, 400, "Game Over.");
+            over = new FlxText(0, 120, 400, "Game Over. Your score: " + FlxG.score + " .");
             over.setFormat(null, 10, 0xffffff, "center", 0);
             add(over);
         }
