@@ -8,19 +8,45 @@ package
      */
     public class BeerMug extends BarThing
     {
-        public static var COLOR1:uint = 0xff0000;
-        public static var COLOR2:uint = 0xffff00;
-        public static var SIZE:Number = 10;
+        public static var SIZE:Number = 25;
 
-        public var full:Boolean;
+        private var _full:Boolean;
 
-        public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
+        [Embed(source="../build/assets/beer_mug.png")]
+        private var BeerMugSprite:Class;
+
+        public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number, full:Boolean = true)
         {
             super(initX, initY, leftBound, rightBound);
-            color = COLOR1;
+
+            this.full = full;
+
+            loadGraphic(BeerMugSprite, false, false, SIZE, SIZE);
+            addAnimation("idle",[0]);
+            addAnimation("fast",[1]);
+            addAnimation("empty",[2]);
+
             collideRight = false;
             collideLeft = true;
         }
 
+        public function get full():Boolean
+        {
+            return _full;
+        }
+
+        public function set full(value:Boolean):void
+        {
+            _full = value;
+
+            if(value)
+            {
+                play("idle");
+            }
+            else
+            {
+                play("empty");
+            }
+        }
     }
 }

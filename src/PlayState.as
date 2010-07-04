@@ -4,6 +4,10 @@ package
 
     public class PlayState extends FlxState
     {
+        //Assets
+        [Embed(source="../build/assets/bar_background.png")]
+        private var BarSprite:Class;
+
         //speeds
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
@@ -71,6 +75,10 @@ package
          */
         override public function create():void
         {
+
+            //create bar background
+            add(new FlxSprite(0, 0, BarSprite));
+
             FlxG.mouse.hide();
 
             //set life count
@@ -95,17 +103,18 @@ package
             tapperPositions = new Array();
             mugPositions = new Array();
             patronPositions = new Array();
-            
-            bars[0] = new FlxRect(10, 50, 380, 10);
-            bars[1] = new FlxRect(10, 110, 380, 10);
-            bars[2] = new FlxRect(10, 170, 380, 10);
-            
-            var barShow:FlxSprite;
+                        
+            bars[0] = new FlxRect(207, 133, 350, 37);
+            bars[1] = new FlxRect(172, 209, 414, 37);
+            bars[2] = new FlxRect(144, 284, 480, 37);
+            bars[3] = new FlxRect(113, 360, 547, 37);
+
+            //var barShow:FlxSprite;
             // generate the bar groups and position arrays.
             for (var i:int = 0; i < bars.length; i++)
             {
-                barShow = new FlxSprite(bars[i].x, bars[i].y).createGraphic(bars[i].width, bars[i].height);
-                add(barShow);
+                //barShow = new FlxSprite(bars[i].x, bars[i].y).createGraphic(bars[i].width, bars[i].height);
+                //add(barShow);
 
                 barMugs[i] = new FlxGroup();
                 add(barMugs[i]);
@@ -116,9 +125,9 @@ package
                 moneyOnBars[i] = new FlxGroup();
                 add(moneyOnBars[i]);
 
-                tapperPositions[i] = new FlxPoint(bars[i].right, bars[i].top);
-                mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top);
-                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top);
+                tapperPositions[i] = new FlxPoint(bars[i].right-7, bars[i].top - 8);
+                mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top-20);
+                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 27);
             }
             
             player = new Player(tapperPositions[0]);
@@ -181,7 +190,7 @@ package
                 }
                 else
                 {   //found one, make sure that it looks like a new one
-                    mug.color = BeerMug.COLOR1;
+                    //mug.color = BeerMug.COLOR1;
                     mug.startPos = pos;
                 }
                 mug.full = true;
@@ -266,7 +275,7 @@ package
                         {   //get the one we found set up right.
                             patron.inPushBack = false;
                             patron.startPos = pos;
-                            patron.color = Patron.COLOR1;
+                            //patron.color = Patron.COLOR1;
                         }
                         //send it along
                         patron.prepare();
@@ -301,7 +310,7 @@ package
             mug.kill();
             patron.velocity.x = 0;
             patron.velocity.y = 0;
-            patron.color = Patron.COLOR2;
+            //patron.color = Patron.COLOR2;
             //push back patron, and let it animate. when it finishes, it'll call pushbackComplete
             patron.inPushBack = true;
             patron.collideRight = false;
@@ -318,7 +327,7 @@ package
          */
         public function pushbackComplete(patron:Patron):void
         {
-            patron.color = Patron.COLOR1;
+            //patron.color = Patron.COLOR1;
             patron.velocity.x = patronSpeed;
             
             //we'll need these references soon.
@@ -341,7 +350,7 @@ package
             else
                 mug.startPos = pos;
             mug.full = false;
-            mug.color = BeerMug.COLOR2;
+            //mug.color = BeerMug.COLOR2;
             mug.prepare();
             mug.velocity.x = mugSpeed / 2;
             

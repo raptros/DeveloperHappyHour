@@ -8,7 +8,7 @@ package
 
     import org.flixel.*;
 
-    [SWF(width="800", height="480", backgroundColor="#000000")];
+    [SWF(width="800", height="480", backgroundColor="#000000", frameRate=30)];
     [Frame(factoryClass="Preloader")];
 
     /**
@@ -16,11 +16,11 @@ package
      */
 	public class DeveloperHappyHour extends FlxGame
 	{
-        public static var WIDTH:int = 400, HEIGHT:int = 240;
+        public static var WIDTH:int = 800, HEIGHT:int = 480;
 
 		public function DeveloperHappyHour()
 		{
-            super(WIDTH, HEIGHT, StartGameState);
+            super(WIDTH, HEIGHT, StartGameState, 1);
             //this makes it easy ... incrementing FlxG.level to advance through the array.
             FlxG.levels.push(new LevelSettings(1, 5));
             FlxG.levels.push(new LevelSettings(1, 7));

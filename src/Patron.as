@@ -11,7 +11,10 @@ package
     {
         public static var COLOR1:uint = 0x00ff00;
         public static var COLOR2:uint = 0x00ffff;
-        public static var SIZE:Number = 10;
+        public static var SIZE:Number = 40;
+
+        [Embed(source="../build/assets/patron_placeholder.png")]
+        private var PatronSprite:Class;
 
         public var pushbackComplete:Function;
         public var mugged:Function;
@@ -28,7 +31,12 @@ package
         public function Patron(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {
             super(initX, initY, leftBound, rightBound);
-            color = COLOR1;
+
+            //TODO this needs to be cleaned up by the correct graphics
+            loadGraphic(PatronSprite, false, false, SIZE, 26);
+
+
+            //color = COLOR1;
             collideLeft = false;
             collideRight = true;
 
