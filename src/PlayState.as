@@ -11,7 +11,7 @@ package
         //speeds
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
-
+        
         //points for events
         private var giveMugPoints:Number = 1;
         private var collectMugPoints:Number = 2;
@@ -55,6 +55,7 @@ package
         private var scoreDisp:FlxText;
 
         private var player:Player;
+
 
         /**
          * get all the settings for the level to be played.
@@ -153,6 +154,7 @@ package
                 freezer -= FlxG.elapsed;
                 if (freezer <= 0)
                     frozen = false;
+                player.update();
                 return ;
             }
 
@@ -174,8 +176,12 @@ package
             var pos:FlxPoint;
 
             //Handle input.
-            if (FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y) 
+            if (FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y)
             {
+            }
+            if (FlxG.keys.justReleased("SPACE") && player.x == curBase.x && player.y == curBase.y) 
+            {
+                player.play("throwing");
                 //chuck a mug from the current position. reuse available mug objects
                 //by checking with the mug group.
                 pos = mugPositions[barNum];
@@ -201,6 +207,7 @@ package
             //move the player up or down a bar.
             else if (FlxG.keys.justPressed("UP"))
             {
+                player.facing = FlxSprite.RIGHT;
                 barNum--;
                 if (barNum < 0)
                     barNum = bars.length - 1;
@@ -209,6 +216,7 @@ package
             }
             else if (FlxG.keys.justPressed("DOWN"))
             {
+                player.facing = FlxSprite.RIGHT;
                 barNum++;
                 if (barNum >= bars.length)
                     barNum = 0;
@@ -218,13 +226,28 @@ package
             //move player left or right along bar
             else if (FlxG.keys.LEFT && player.x > curBar.left)
             {
+                player.facing = FlxSprite.RIGHT;
                 player.x -= playerStep;
                                 
             }
-            else if (FlxG.keys.RIGHT && player.x < curBar.right)
+            else if (FlxG.keys.RIGHT && player.x < curBase.x)
             {
+                player.facing = FlxSprite.LEFT;
                 player.x += playerStep;
             }
+
+            //animation checks that will be separate.
+            if (FlxG.keys.justPressed("LEFT") || FlxG.keys.justPressed("RIGHT"))
+            {
+                player.play("running");
+            }
+            else if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
+            {
+                player.facing = FlxSprite.RIGHT;
+                player.frame = 0;
+            }
+                
+
 
             //check overlap of player and empty mugs
             FlxU.overlap(player, curMugs, playerMugged);
@@ -382,7 +405,8 @@ package
         {
             lives--;
             frozen = true;
-            freezer = 1.0;
+            freezer = 2.0;
+            player.play("dropped");
         }
 
         /**
@@ -396,7 +420,8 @@ package
             {
                 lives--;
                 frozen = true;
-                freezer = 1.0;
+                freezer = 2.0;
+                player.play("dropped");
             }
         }
 

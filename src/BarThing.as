@@ -8,7 +8,6 @@ package
      */
     public class BarThing extends FlxSprite
     {
-        public static var COLOR:uint = 0x999999;
         public var startPos:FlxPoint;
         public static var SIZE:Number = 10;
 
@@ -24,8 +23,6 @@ package
         public function BarThing(initX:Number, initY:Number, leftBound:Number, rightBound:Number)
         {
             super(initX, initY);
-            createGraphic(SIZE, SIZE);
-            color = COLOR;
 
             leftB = leftBound;
             rightB = rightBound;

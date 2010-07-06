@@ -22,7 +22,7 @@ package
             add(new FlxSprite(0,0,TitleSprite));
 
             var mug:FlxSprite = new FlxSprite(430,151);
-            mug.loadGraphic(BeerMugSprite,true, false, 118,166);
+            mug.loadGraphic(BeerMugSprite,true, true, 118,166);
             mug.addAnimation("fill", [0,1,2,3,4,5,6,7,8,9,10], 5, false);
             add(mug);
 
