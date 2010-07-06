@@ -9,11 +9,15 @@ package
     {
         public static var COLOR:uint=0xff00ff;
         private var lifeTime:Number=10.0;
+
+        [Embed(source="../build/assets/money.png")]
+        private var MoneySprite:Class;
        
        public function Money(initX:Number, initY:Number, leftBound:Number, rightBound:Number) 
         {
             super(initX, initY, leftBound, rightBound);
-            color = COLOR;
+            loadGraphic(MoneySprite, false, false, 27, 13);
+
             collideLeft=false;
             collideRight=false;
         }

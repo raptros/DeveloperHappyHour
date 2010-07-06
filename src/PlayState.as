@@ -358,7 +358,7 @@ package
             var curMugs:FlxGroup = barMugs[patron.whichBar];
             var curMoney:FlxGroup = moneyOnBars[patron.whichBar];
 
-            var pos:FlxPoint = new FlxPoint(patron.right + 1, patron.y)
+            var pos:FlxPoint = new FlxPoint(patron.right + 1, mugPositions[patron.whichBar].y)
             // the only difference between this bit of code and the code for
             //handling spacebar is the color,placement, and direction of the mug.
             var mug:BeerMug = curMugs.getFirstAvail() as BeerMug;
@@ -378,6 +378,7 @@ package
             mug.velocity.x = mugSpeed / 2;
             
             pos.x = patron.x;
+            pos.y = patron.bottom;
             //check up on dropping money
             if (mugsGiven >= whenMoney)
             {
