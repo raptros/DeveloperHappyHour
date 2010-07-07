@@ -5,7 +5,7 @@ package
     public class PlayState extends FlxState
     {
         //Assets
-        [Embed(source="../build/assets/bar_background.png")]
+        [Embed(source="../build/assets/bar_background_modded.png")]
         private var BarSprite:Class;
 
         [Embed(source="../build/assets/sprites-tap.png")]
@@ -273,20 +273,19 @@ package
             {
                 player.facing = FlxSprite.RIGHT;
                 player.x -= playerStep;
-                                
+                if (!isSwitching)
+                    player.play("running");
             }
             else if (FlxG.keys.RIGHT && player.x < curBase.x && !isFilling)
             {
                 player.facing = FlxSprite.LEFT;
                 player.x += playerStep;
+                if (!isSwitching)
+                    player.play("running");
             }
 
-            //animate the moving player.
-            if ((FlxG.keys.justPressed("LEFT") || FlxG.keys.justPressed("RIGHT")) && !isFilling)
-            {
-                player.play("running");
-            }
-            else if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
+            //stop the running.
+            if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
             {
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
