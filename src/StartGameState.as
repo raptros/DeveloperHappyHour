@@ -13,7 +13,7 @@ package
         [Embed(source="../build/assets/opening_screen.png")]
         private var TitleSprite:Class;
 
-        [Embed(source="../build/assets/opening_screen_animation.png")]
+        [Embed(source="../build/assets/sprites-opening-screen.png")]
         private var BeerMugSprite:Class;
 
         override public function create():void

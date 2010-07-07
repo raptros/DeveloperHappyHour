@@ -8,6 +8,9 @@ package
         [Embed(source="../build/assets/bar_background.png")]
         private var BarSprite:Class;
 
+        [Embed(source="../build/assets/sprites-tap.png")]
+        private var BarTap:Class;
+
         //speeds
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
@@ -32,11 +35,16 @@ package
         //time till next wave
         private var countDown:Number;
 
-        //arrays holding data for each bar
+        //ARRAYS
+        //rects
         private var bars:Array;
+        //groups
         private var barMugs:Array;
         private var barPatrons:Array;
         private var moneyOnBars:Array;
+        //sprites
+        private var taps:Array;
+        //points
         private var tapperPositions:Array;
         private var mugPositions:Array;
         private var patronPositions:Array;
@@ -49,6 +57,11 @@ package
         //animation freeze for dropping something
         private var freezer:Number;
         private var frozen:Boolean=false;
+        private var oldFrame:Number;
+        
+        //state flags
+        private var isSwitching:Boolean=false;
+        private var isFilling:Boolean=false;
         
         //displays
         private var lifeCounter:FlxText;
@@ -101,14 +114,17 @@ package
             barMugs = new Array();
             barPatrons = new Array();
             moneyOnBars = new Array();
+            taps = new Array();
             tapperPositions = new Array();
             mugPositions = new Array();
             patronPositions = new Array();
                         
-            bars[0] = new FlxRect(207, 133, 350, 37);
-            bars[1] = new FlxRect(172, 209, 414, 37);
-            bars[2] = new FlxRect(144, 284, 480, 37);
-            bars[3] = new FlxRect(113, 360, 547, 37);
+            bars[0] = new FlxRect(206, 133, 361, 37);
+            bars[1] = new FlxRect(174, 209, 423, 37);
+            bars[2] = new FlxRect(142, 284, 489, 37);
+            bars[3] = new FlxRect(110, 360, 553, 37);
+
+            var tapOffsets:Array=[5, 7, 5, 5];
 
             //var barShow:FlxSprite;
             // generate the bar groups and position arrays.
@@ -126,7 +142,13 @@ package
                 moneyOnBars[i] = new FlxGroup();
                 add(moneyOnBars[i]);
 
-                tapperPositions[i] = new FlxPoint(bars[i].right-7, bars[i].top - 8);
+                taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - 40); //+9, -40
+                taps[i].loadGraphic(BarTap, false, false, 62,53);
+                taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], 16, false);
+                taps[i].frame=0;
+                add(taps[i]);
+
+                tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top-20);
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 27);
             }
@@ -153,9 +175,22 @@ package
             {
                 freezer -= FlxG.elapsed;
                 if (freezer <= 0)
+                {
                     frozen = false;
+                    player.frame=0;
+                    isFilling=false;
+                }
                 player.update();
                 return ;
+            }
+
+            //test for done switching
+            if (isSwitching && player.finished)
+            {
+                player.x = tapperPositions[barNum].x;
+                player.y = tapperPositions[barNum].y;
+                isSwitching = false;
+                player.frame=0;
             }
 
             //test for game over
@@ -177,11 +212,22 @@ package
 
             //Handle input.
             if (FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y)
-            {
+            { //run the filling animation
+                isFilling=true;
+                taps[barNum].play("filling");
+                player.frame=11;
             }
-            if (FlxG.keys.justReleased("SPACE") && player.x == curBase.x && player.y == curBase.y) 
-            {
+            if (isFilling && !taps[barNum].finished && FlxG.keys.justReleased("SPACE"))
+            { //mug didn't fill - player let go of tap too early.
+                player.frame=0;
+                taps[barNum].frame=0;
+                isFilling=false;
+            }
+            else if (isFilling && FlxG.keys.justReleased("SPACE"))
+            { //run the throwing animation, and throw a mug.
                 player.play("throwing");
+                taps[barNum].frame=0;
+                isFilling=false;
                 //chuck a mug from the current position. reuse available mug objects
                 //by checking with the mug group.
                 pos = mugPositions[barNum];
@@ -196,7 +242,6 @@ package
                 }
                 else
                 {   //found one, make sure that it looks like a new one
-                    //mug.color = BeerMug.COLOR1;
                     mug.startPos = pos;
                 }
                 mug.full = true;
@@ -205,50 +250,48 @@ package
                 mug.velocity.y = 0;
             }
             //move the player up or down a bar.
-            else if (FlxG.keys.justPressed("UP"))
+            else if (FlxG.keys.justPressed("UP") && !isFilling)
             {
+                isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
                 barNum--;
                 if (barNum < 0)
                     barNum = bars.length - 1;
-                player.x = tapperPositions[barNum].x;
-                player.y = tapperPositions[barNum].y;
+                player.play("switching");
             }
-            else if (FlxG.keys.justPressed("DOWN"))
+            else if (FlxG.keys.justPressed("DOWN")  && !isFilling)
             {
+                isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
                 barNum++;
                 if (barNum >= bars.length)
                     barNum = 0;
-                player.x = tapperPositions[barNum].x;
-                player.y = tapperPositions[barNum].y;
+                player.play("switching");
             }
             //move player left or right along bar
-            else if (FlxG.keys.LEFT && player.x > curBar.left)
+            else if (FlxG.keys.LEFT && player.x > curBar.left && !isFilling)
             {
                 player.facing = FlxSprite.RIGHT;
                 player.x -= playerStep;
                                 
             }
-            else if (FlxG.keys.RIGHT && player.x < curBase.x)
+            else if (FlxG.keys.RIGHT && player.x < curBase.x && !isFilling)
             {
                 player.facing = FlxSprite.LEFT;
                 player.x += playerStep;
             }
 
-            //animation checks that will be separate.
-            if (FlxG.keys.justPressed("LEFT") || FlxG.keys.justPressed("RIGHT"))
+            //animate the moving player.
+            if ((FlxG.keys.justPressed("LEFT") || FlxG.keys.justPressed("RIGHT")) && !isFilling)
             {
                 player.play("running");
             }
-            else if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
+            else if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
             {
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
             }
                 
-
-
             //check overlap of player and empty mugs
             FlxU.overlap(player, curMugs, playerMugged);
 
@@ -298,7 +341,6 @@ package
                         {   //get the one we found set up right.
                             patron.inPushBack = false;
                             patron.startPos = pos;
-                            //patron.color = Patron.COLOR1;
                         }
                         //send it along
                         patron.prepare();
@@ -333,7 +375,6 @@ package
             mug.kill();
             patron.velocity.x = 0;
             patron.velocity.y = 0;
-            //patron.color = Patron.COLOR2;
             //push back patron, and let it animate. when it finishes, it'll call pushbackComplete
             patron.inPushBack = true;
             patron.collideRight = false;
@@ -373,7 +414,6 @@ package
             else
                 mug.startPos = pos;
             mug.full = false;
-            //mug.color = BeerMug.COLOR2;
             mug.prepare();
             mug.velocity.x = mugSpeed / 2;
             
@@ -407,6 +447,7 @@ package
             lives--;
             frozen = true;
             freezer = 2.0;
+            taps[barNum].frame=0;
             player.play("dropped");
         }
 
@@ -422,6 +463,7 @@ package
                 lives--;
                 frozen = true;
                 freezer = 2.0;
+                taps[barNum].frame=0;
                 player.play("dropped");
             }
         }
@@ -443,6 +485,7 @@ package
             lives--;
             frozen = true;
             freezer = 1.0;
+            taps[barNum].frame=0;
         }
 
         /**

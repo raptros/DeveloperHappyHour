@@ -12,7 +12,7 @@ package
 
         private var _full:Boolean;
 
-        [Embed(source="../build/assets/beer_mug.png")]
+        [Embed(source="../build/assets/sprites-mug.png")]
         private var BeerMugSprite:Class;
 
         public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number, full:Boolean = true)
