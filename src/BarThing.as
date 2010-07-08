@@ -58,9 +58,14 @@ package
          */
         public function dieLeft():void
         {
-            kill();
             if (onDieLeft != null)
-                onDieLeft(this);
+            {   
+                //let the callback decide whether or not to kill this object.
+                if (onDieLeft(this))
+                    kill();
+            }
+            else
+                kill();
         }
         
         /**
@@ -69,9 +74,13 @@ package
          */
         public function dieRight():void
         {
-            kill();
             if (onDieRight != null)
-                onDieRight(this);
+            {
+                //let the callback decide whether or not to kill this object.
+                if (onDieRight(this)) 
+                    kill();
+            }
+            else kill();
         }
 
     }

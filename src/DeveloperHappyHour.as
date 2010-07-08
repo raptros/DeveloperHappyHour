@@ -22,11 +22,12 @@ package
 		{
             super(WIDTH, HEIGHT, StartGameState, 1);
             //this makes it easy ... incrementing FlxG.level to advance through the array.
-            FlxG.levels.push(new LevelSettings(1, 5));
-            FlxG.levels.push(new LevelSettings(1, 7));
-            FlxG.levels.push(new LevelSettings(2, 5));
-            FlxG.levels.push(new LevelSettings(2, 7));
-            FlxG.levels.push(new LevelSettings(2, 11));
+            //order: maxPatrons, patronsToClear, patronStep, pushBack, patronGap, whenMoney
+            FlxG.levels.push(new LevelSettings(1,  5, 20, 40, 10, 3));
+            FlxG.levels.push(new LevelSettings(1,  7, 20, 30, 10, 4));
+            FlxG.levels.push(new LevelSettings(2,  5, 20, 35, 10, 5));
+            FlxG.levels.push(new LevelSettings(2,  7, 20, 30, 10, 6));
+            FlxG.levels.push(new LevelSettings(2, 11, 20, 20, 10, 7));
 		}
 
 	}

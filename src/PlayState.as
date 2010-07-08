@@ -24,7 +24,7 @@ package
         //level settings
         private var maxPatrons:Number;
         private var patronsToClear:Number;
-        private var patronSpeed:Number; 
+        private var patronStep:Number; 
         private var pushBack:Number; //pixels
         private var patronGap:Number; //seconds
         private var whenMoney:Number;
@@ -58,6 +58,7 @@ package
         private var freezer:Number;
         private var frozen:Boolean=false;
         private var oldFrame:Number;
+        private var keepUpdating:FlxGroup;
         
         //state flags
         private var isSwitching:Boolean=false;
@@ -78,7 +79,7 @@ package
             super();
             maxPatrons = ls.maxPatrons;
             patronsToClear = ls.patronsToClear;
-            patronSpeed = ls.patronSpeed;
+            patronStep = ls.patronStep;
             pushBack = ls.pushBack;
             patronGap = ls.patronGap;
             whenMoney = ls.whenMoney;
@@ -150,7 +151,7 @@ package
 
                 tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top-20);
-                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 27);
+                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 29);
             }
             
             player = new Player(tapperPositions[0]);
@@ -170,7 +171,7 @@ package
                 FlxG.state = new LevelClearedState(patronsOut);
             }
 
-            //test for frozen (stops animations except one)
+            //test for frozen (stop animations except for one group, then go to prepare state)
             if (frozen)
             {
                 freezer -= FlxG.elapsed;
@@ -334,6 +335,7 @@ package
                             patron.whichBar = i;
                             patron.onDieLeft = patronPushedOut;
                             patron.onDieRight = patronAttacks;
+                            patron.moveStep = patronStep;
                             curPatrons.add(patron);
                         }
                         else
@@ -343,8 +345,7 @@ package
                         }
                         //send it along
                         patron.prepare();
-                        patron.velocity.x = patronSpeed;
-                        patron.velocity.y = 0;
+                        patron.play("walk");
                     }
                 }
 
@@ -372,12 +373,13 @@ package
             mugsGiven++;
 
             mug.kill();
-            patron.velocity.x = 0;
-            patron.velocity.y = 0;
             //push back patron, and let it animate. when it finishes, it'll call pushbackComplete
             patron.inPushBack = true;
+            patron.isAnimating=false;
             patron.collideRight = false;
             patron.targetX = patron.x - pushBack;
+            patron.play("catch");
+            patron.y += 3;
         }
 
         /**
@@ -390,9 +392,6 @@ package
          */
         public function pushbackComplete(patron:Patron):void
         {
-            //patron.color = Patron.COLOR1;
-            patron.velocity.x = patronSpeed;
-            
             //we'll need these references soon.
             var curBar:FlxRect = bars[patron.whichBar];
             var curMugs:FlxGroup = barMugs[patron.whichBar];
@@ -436,27 +435,34 @@ package
 
             patron.collideRight = true;
             patron.inPushBack = false;
+            patron.play("walk");
+            patron.y -= 3;
         }
 
         /**
          * always lose in this case.
          */
-        public function mugDroppedLeft(mug:BeerMug):void
+        public function mugDroppedLeft(mug:BeerMug):Boolean
         {
             lives--;
             frozen = true;
             freezer = 2.0;
             taps[barNum].frame=0;
             player.play("dropped");
+//            mug.doDropAnimation();
+            return true;
         }
 
         /**
          * only lose if player isn't at that bar.
          */
-        public function mugDroppedRight(mug:BeerMug):void
+        public function mugDroppedRight(mug:BeerMug):Boolean
         {
             if (barNum == mug.whichBar)
+            {
                 FlxG.score += collectMugPoints;
+                return true;
+            }
             else
             {
                 lives--;
@@ -464,27 +470,31 @@ package
                 freezer = 2.0;
                 taps[barNum].frame=0;
                 player.play("dropped");
+            //    mug.doDropAnimation();
+                return true;
             }
         }
 
         /**
         * never causes lose. it is a good thing.
         */
-        public function patronPushedOut(patron:Patron):void
+        public function patronPushedOut(patron:Patron):Boolean
         {
             patronsOut++;
             FlxG.score += pushOutPatronPoints;
+            return true;
         }
 
         /**
          * always lose in this case.
          */
-        public function patronAttacks(patron:Patron):void
+        public function patronAttacks(patron:Patron):Boolean
         {
             lives--;
             frozen = true;
             freezer = 1.0;
             taps[barNum].frame=0;
+            return true;
         }
 
         /**
