@@ -9,6 +9,7 @@ package
      */
     public class Patron extends BarThing
     {
+        public static var WIDTH:Number = 59, HEIGHT:Number=31;
         //public static var SIZE:Number = 40;
         public static var lengthSheetPart:Number = 4;
 
@@ -37,8 +38,8 @@ package
         {
             super(initX, initY, leftBound, rightBound);
 
-            //TODO this needs to be cleaned up by the correct graphics
-            loadGraphic(PatronSprite, false, false, 59, 31);
+            //this is going to have to hold every single patron sprite, the way I see it.
+            loadGraphic(PatronSprite, false, false, WIDTH, HEIGHT);
             
             //there are different patrons every n levels. pick one.
             //var whichPatron:Number = Math.floor(Math.random() * 5); //one of four, times n
@@ -46,30 +47,15 @@ package
             patronStartIndex = 0;
             
             addAnimation("walk", [1, 0, 0, 0, 0, 1], 6, true);
-            addAnimation("rant", [2, 3], 2, true);
+            addAnimation("rant", [2, 3], 4, true);
             addAnimation("catch", [4], 1, true);
-            addAnimation("drink", [5, 6, 7, 8], 2, false);
+            addAnimation("drink", [5, 6, 7, 8], 1, false);
 
             collideLeft = false;
             collideRight = true;
 
         }
         
-        override public function set frame(value:uint):void
-        {
-            switch(value - patronStartIndex)
-            {
-                case 5:
-                    y -= 10;
-                    break;
-                case 9:
-                    y += 3;
-                default:
-                    break;
-            }
-            
-            super.frame = value;
-        }
 
         override public function update():void
         {
@@ -82,7 +68,7 @@ package
                     targetX = x + moveStep;
                     if (inPushBack) 
                     {
-                        y += 3;
+                        y += 3; //realign the patron after completing the drink animation
                         pushbackComplete(this);
                     }
                     else
@@ -99,15 +85,19 @@ package
                 else
                 {
                     //start the animation here.
-                    animTime = 2.0;
                     isAnimating = true;
                     if (inPushBack)
                     {
+                        animTime = 2.0;
+                        //make sure that the patron will be aligned during the drink animation
                         y -= 3;
                         play("drink");
                     }
                     else
+                    {
+                        animTime = 1.0;
                         play("rant");
+                    }
                 }
             }
 

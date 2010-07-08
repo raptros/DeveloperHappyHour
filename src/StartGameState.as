@@ -28,9 +28,10 @@ package
 
             FlxG.mouse.show();
 
-            //reset level and score.
+            //reset level, lives, and scores
             FlxG.level = 0;
             FlxG.score = 0;
+            FlxG.scores[1] = 3;
 
             //TODO This should be on a timer
             mug.play("fill");
@@ -40,7 +41,7 @@ package
         {
             if (FlxG.mouse.justReleased()) 
             {
-                FlxG.state = new PlayState(FlxG.levels[FlxG.level]);
+                FlxG.state = new ScoreShowState();
             }
             super.update();
         }

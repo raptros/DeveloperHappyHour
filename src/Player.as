@@ -15,7 +15,7 @@ package
             loadGraphic(BartenderSprite, true, true, 56, 51);
             addAnimation("standing", [0], 10, false);
             addAnimation("throwing", [1, 0], 2, false);
-            addAnimation("dropped", [2, 2, 0], 1, false);
+            addAnimation("dropped", [2], 1, false);
             addAnimation("running", [3, 4, 5, 6], 12, true);
             addAnimation("switching", [7, 7, 8, 9, 10], 25, false);
 

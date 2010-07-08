@@ -11,6 +11,8 @@ package
         public static var SIZE:Number = 25;
 
         private var _full:Boolean;
+        public var dropping:Boolean=false;
+        public var targetY:Number;
 
         [Embed(source="../build/assets/sprites-mug.png")]
         private var BeerMugSprite:Class;
@@ -33,6 +35,21 @@ package
         public function get full():Boolean
         {
             return _full;
+        }
+
+        override public function update():void
+        {
+            if (dropping)
+            {
+                if (y <= targetY)
+                    y+=5;
+                else
+                {
+                    dropping = false;
+                    kill();
+                }
+            }
+            super.update();
         }
 
         public function set full(value:Boolean):void

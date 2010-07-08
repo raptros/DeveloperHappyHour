@@ -23,10 +23,10 @@ package
     
         //level settings
         private var maxPatrons:Number;
-        private var patronsToClear:Number;
         private var patronStep:Number; 
         private var pushBack:Number; //pixels
         private var patronGap:Number; //seconds
+        private var probPatron:Number; //percent probability
         private var whenMoney:Number;
         
         //position
@@ -50,9 +50,9 @@ package
         private var patronPositions:Array;
 
         //counters
-        private var patronsOut:Number = 0;
+        //private var patronsOut:Number = 0;
         private var mugsGiven:Number = 0;
-        private var lives:Number;
+        private var patronCount:Number = 0;
 
         //animation freeze for dropping something
         private var freezer:Number;
@@ -78,11 +78,22 @@ package
         {
             super();
             maxPatrons = ls.maxPatrons;
-            patronsToClear = ls.patronsToClear;
             patronStep = ls.patronStep;
             pushBack = ls.pushBack;
             patronGap = ls.patronGap;
+            probPatron = ls.probPatron;
             whenMoney = ls.whenMoney;
+        }
+
+        //life counter.
+        public function get lives():Number
+        {
+            return FlxG.scores[1];
+        }
+
+        public function set lives(value:Number):void
+        {
+            FlxG.scores[1]=value;
         }
 
         /**
@@ -97,7 +108,6 @@ package
             FlxG.mouse.hide();
 
             //set life count
-            lives = 3;
             lifeCounter = new FlxText(300, 10, 50, lives.toString());
             lifeCounter.setFormat(null, 8, 0xffffff, "right");
             add(lifeCounter);
@@ -107,7 +117,8 @@ package
             scoreDisp.setFormat(null, 8, 0xffffff, "right");
             add(scoreDisp);
 
-            countDown = 0; //so that they come right away.
+            //set the countdown for patrons.
+            countDown = patronGap; 
 
             //arrays that contain information about the bars and their
             //locations and object groups.
@@ -127,13 +138,11 @@ package
 
             var tapOffsets:Array=[5, 7, 5, 5];
 
-            //var barShow:FlxSprite;
             // generate the bar groups and position arrays.
+            var pos:FlxPoint;
+            var patron:Patron;
             for (var i:int = 0; i < bars.length; i++)
             {
-                //barShow = new FlxSprite(bars[i].x, bars[i].y).createGraphic(bars[i].width, bars[i].height);
-                //add(barShow);
-
                 barMugs[i] = new FlxGroup();
                 add(barMugs[i]);
 
@@ -152,6 +161,25 @@ package
                 tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top-20);
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 29);
+                
+                //deploy the maximum number of patrons right away.
+                for (var p:int = 0; p < maxPatrons; p++)
+                {
+                    pos = new FlxPoint(patronPositions[i].x, patronPositions[i].y);
+                    pos.x += p*Patron.WIDTH;
+                    patron = new Patron(pos.x, pos.y, bars[i].left, bars[i].right);
+                    patron.pushbackComplete = pushbackComplete;
+                    patron.mugged = patronMugged;
+                    patron.whichBar = i;
+                    patron.onDieLeft = patronPushedOut;
+                    patron.onDieRight = patronAttacks;
+                    patron.moveStep = patronStep;
+                    barPatrons[i].add(patron);
+                    //send it along
+                    patron.prepare();
+                    patron.play("walk");
+                    patronCount++;
+                }
             }
             
             player = new Player(tapperPositions[0]);
@@ -161,29 +189,35 @@ package
 
         override public function update():void
         {
-            //make sure text displays are up to date
-            lifeCounter.text = lives.toString();
-            scoreDisp.text = FlxG.score.toString();
-            
-            //test for level clear.
-            if (patronsToClear <= patronsOut)
-            {
-                FlxG.state = new LevelClearedState(patronsOut);
-            }
-
             //test for frozen (stop animations except for one group, then go to prepare state)
             if (frozen)
             {
                 freezer -= FlxG.elapsed;
+                //once the animation is over, transition to a different state.
                 if (freezer <= 0)
                 {
-                    frozen = false;
-                    player.frame=0;
-                    isFilling=false;
+                    //game over
+                    if (lives < 0)
+                        FlxG.state = new GameOverState();
+                    //level clear.
+                    else if (patronCount <= 0)
+                    {
+                        FlxG.level++;
+                        FlxG.state = new PrepareState();
+                    }
+                    //life loss situation
+                    else
+                        FlxG.state = new PrepareState();
                 }
-                player.update();
+                if (keepUpdating != null)
+                    keepUpdating.update();
                 return ;
             }
+
+            //make sure text displays are up to date
+            lifeCounter.text = lives.toString();
+            scoreDisp.text = FlxG.score.toString();
+            
 
             //test for done switching
             if (isSwitching && player.finished)
@@ -194,14 +228,6 @@ package
                 player.frame=0;
             }
 
-            //test for game over
-            if (lives <= 0)
-            {
-                FlxG.state = new GameOverState();
-            }
-
-            //IMPORTANT.
-            super.update();
 
             //get references from the arrays.
             var curBar:FlxRect = bars[barNum];
@@ -291,6 +317,9 @@ package
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
             }
+
+            //IMPORTANT.
+            super.update();
                 
             //check overlap of player and empty mugs
             FlxU.overlap(player, curMugs, playerMugged);
@@ -321,14 +350,15 @@ package
                 {
                     //flip coin, add a patron if yes.
                     flip = Math.random();
-                    if (flip > 0.5)
+                    if (flip < probPatron)
                     {
                         //This is the same process as for mugs - look for a patron
-                        //object that isn't in play.
+                        //object that isn't in play. 
                         pos = patronPositions[i];
                         var patron:Patron = curPatrons.getFirstAvail() as Patron;
-                        if (!patron)
-                        {   //there isn't one available, so make a new one with right props
+                        if (!patron) //I don't think this will ever be run,
+                        { // now that maximum patrons for each bar are deployed from the start.
+                            //there isn't one available, so make a new one with right props
                             patron = new Patron(pos.x, pos.y, curBar.left, curBar.right);
                             patron.pushbackComplete = pushbackComplete;
                             patron.mugged = patronMugged;
@@ -345,6 +375,7 @@ package
                         }
                         //send it along
                         patron.prepare();
+                        patronCount++;
                         patron.play("walk");
                     }
                 }
@@ -417,7 +448,7 @@ package
             
             pos.x = patron.x;
             pos.y = patron.bottom;
-            //check up on dropping money
+            //check up on dropping money. TODO add animation for patron dropping money.
             if (mugsGiven >= whenMoney)
             {
                 mugsGiven = 0;
@@ -444,13 +475,26 @@ package
          */
         public function mugDroppedLeft(mug:BeerMug):Boolean
         {
-            lives--;
+            //prepare for freezing most of the animations.
             frozen = true;
             freezer = 2.0;
-            taps[barNum].frame=0;
+            keepUpdating = new FlxGroup();
+            keepUpdating.add(player);
+            keepUpdating.add(mug);
+
+            //now do animation and game data updates.
+            lives--;
             player.play("dropped");
-//            mug.doDropAnimation();
-            return true;
+
+            mug.dropping = true;
+            mug.x++;//so it gets back within bounds.
+            mug.targetY = mug.y + 50; //whatever the "height" of the bar is.
+            mug.velocity.x = 0;
+            mug.velocity.y = 0;
+            //mug.play("dropping-full");
+            if (lives < 0)
+                displayGameOver();
+            return false;
         }
 
         /**
@@ -465,13 +509,27 @@ package
             }
             else
             {
-                lives--;
+                //prepare for freezing most of the animations.
                 frozen = true;
                 freezer = 2.0;
-                taps[barNum].frame=0;
+                keepUpdating = new FlxGroup();
+                keepUpdating.add(player);
+                keepUpdating.add(mug);
+
+                //now do animation and game data updates.
+                lives--;
                 player.play("dropped");
-            //    mug.doDropAnimation();
-                return true;
+
+                mug.dropping = true;
+                mug.x--;//so it gets back within bounds.
+                mug.targetY = mug.y + 50; //whatever the "height" of the bar is.
+                mug.velocity.x = 0;
+                mug.velocity.y = 0;
+                //mug.play("dropping-empty");
+
+                if (lives < 0)
+                    displayGameOver();
+                return false;
             }
         }
 
@@ -480,8 +538,16 @@ package
         */
         public function patronPushedOut(patron:Patron):Boolean
         {
-            patronsOut++;
+            patronCount--;
             FlxG.score += pushOutPatronPoints;
+            if (patronCount <= 0)
+            {
+                //prepare for freezing most of the animations.
+                frozen = true;
+                freezer = 2.0;
+                keepUpdating = new FlxGroup();
+                keepUpdating.add(player);
+            }
             return true;
         }
 
@@ -490,10 +556,17 @@ package
          */
         public function patronAttacks(patron:Patron):Boolean
         {
-            lives--;
+            //prepare for freezing most of the animations.
             frozen = true;
-            freezer = 1.0;
-            taps[barNum].frame=0;
+            freezer = 2.0;
+            keepUpdating = new FlxGroup();
+            keepUpdating.add(player);
+            //keepUpdating.add(patron); 
+            //now do maintainence.
+            lives--;
+            //animate interaction between player and patron.
+            if (lives < 0)
+                displayGameOver();
             return true;
         }
 
@@ -517,6 +590,18 @@ package
         {
             FlxG.score += collectMoneyPoints;
             moneyObj.kill();
+        }
+        
+        /**
+         * throws up the game over display
+         */
+        public function displayGameOver():void
+        {
+            var gameOver:FlxText = new FlxText(0, 440, 800, "GAME OVER");
+            gameOver.setFormat(null, 15, 0xdbff00, "center", 0);
+            add(gameOver);
+            if (keepUpdating != null)
+                keepUpdating.add(gameOver);
         }
     }
 }

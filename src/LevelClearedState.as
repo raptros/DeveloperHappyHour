@@ -3,6 +3,7 @@ package
     import org.flixel.*;
     /**
      * to be displayed upon clearing a level of the appropriate number of patrons.
+     * not used.
      */
     public class LevelClearedState extends FlxState
     {
