@@ -24,11 +24,13 @@ package
         public var targetX:Number;
         public var inPushBack:Boolean = false;
         public var isAnimating:Boolean = false;
+        public var drinking:Boolean = false;
+        public var doBurp:Boolean = false;
 
         private var deltaX:Number=1; 
         private var animTime:Number;
 
-        private var patronStartIndex:Number;
+        private var psi:Number; //Patron Start Index
 
 
 //        public var worth; //how many points this patron is worth.
@@ -40,16 +42,18 @@ package
 
             //this is going to have to hold every single patron sprite, the way I see it.
             loadGraphic(PatronSprite, false, false, WIDTH, HEIGHT);
+            var numPatrons:Number = 1;
+            var whichPatron:Number = Math.floor(Math.random() * (numPatrons + 1));
+            //psi = whichPatron * lengthSheetPart; 
+            psi = 0;
             
-            //there are different patrons every n levels. pick one.
-            //var whichPatron:Number = Math.floor(Math.random() * 5); //one of four, times n
-            //patronStartIndex = whichPatron * lengthSheetPart; 
-            patronStartIndex = 0;
-            
-            addAnimation("walk", [1, 0, 0, 0, 0, 1], 6, true);
-            addAnimation("rant", [2, 3], 4, true);
-            addAnimation("catch", [4], 1, true);
-            addAnimation("drink", [5, 6, 7, 8], 1, false);
+            addAnimationCallback(onAnimationChange);
+            addAnimation("walk", [psi + 1, psi, psi, psi, psi, psi+1], 6, true);
+            addAnimation("rant", [psi+2, psi+3], 4, true);
+            addAnimation("catch", [psi+4], 1, true);
+            addAnimation("drink", [psi+5, psi+6, psi+7, psi+8, psi+9], 2, false);
+            addAnimation("drinkBurp", [psi+5, psi+6, psi+7, psi+8, psi+9, psi, psi+10], 2, false);
+            addAnimation("burp", [psi+10, psi], 2, false);
 
             collideLeft = false;
             collideRight = true;
@@ -68,7 +72,13 @@ package
                     targetX = x + moveStep;
                     if (inPushBack) 
                     {
-                        y += 3; //realign the patron after completing the drink animation
+                        if (doBurp) // almost working.
+                        {
+                            isAnimating = true;
+                            targetX = x;
+                            animTime = 1.0;
+                            play("burp");
+                        }
                         pushbackComplete(this);
                     }
                     else
@@ -88,10 +98,9 @@ package
                     isAnimating = true;
                     if (inPushBack)
                     {
-                        animTime = 2.0;
-                        //make sure that the patron will be aligned during the drink animation
-                        y -= 3;
+                        animTime = 2.5;
                         play("drink");
+                            
                     }
                     else
                     {
@@ -103,6 +112,14 @@ package
 
             super.update();
                     
+            if (drinking)
+            {
+                if (frame == psi + 9)
+                    y = startPos.y + 3;
+                else 
+                    y = startPos.y;
+            }
+
         }
 
         /**
@@ -116,6 +133,8 @@ package
             animTime = 0;
             inPushBack = false;
             collideRight = true;
+            doBurp = false;
+            drinking = false;
         }
 
         /**
@@ -126,6 +145,18 @@ package
             var mug:BeerMug = c as BeerMug;
             if (mug != null)
                 mugged(c, this);
+        }
+
+        public function onAnimationChange(name:String, fNum:uint, fIdx:uint):void
+        {
+            y = startPos.y;
+            drinking = false
+            if (name == "catch")
+                y+=3;
+            else if (name == "drink" || name == "drinkBurp")
+            {
+                drinking = true;
+            }
         }
     }
 }

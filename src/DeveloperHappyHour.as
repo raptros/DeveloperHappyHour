@@ -6,6 +6,9 @@ package
 	import flash.display.StageAlign;
 	import flash.display.Sprite;
 
+    import flash.ui.Multitouch;
+    import flash.ui.MultitouchInputMode;
+
     import org.flixel.*;
 
     [SWF(width="800", height="480", backgroundColor="#000000", frameRate=30)];
@@ -20,14 +23,19 @@ package
 
 		public function DeveloperHappyHour()
 		{
+            /*CONFIG::mobile
+            {
+                Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+                FlxG.mobile = true; 
+            }*/
             super(WIDTH, HEIGHT, StartGameState, 1);
             //this makes it easy ... incrementing FlxG.level to advance through the array.
             //order: maxPatrons, patronStep, pushBack, patronGap, probPatron, whenMoney
-            FlxG.levels.push(new LevelSettings(1, 10, 50, 10, 0.4, 3));
-            FlxG.levels.push(new LevelSettings(1, 20, 40, 10, 0.5, 4));
-            FlxG.levels.push(new LevelSettings(2, 20, 45, 10, 0.5, 5));
-            FlxG.levels.push(new LevelSettings(2, 20, 40, 10, 0.5, 6));
-            FlxG.levels.push(new LevelSettings(2, 20, 35, 10, 0.5, 7));
+            FlxG.levels.push(new LevelSettings(1, 10, 50, 10, 0.4, 3, 50));
+            FlxG.levels.push(new LevelSettings(1, 20, 40, 10, 0.5, 4, 50));
+            FlxG.levels.push(new LevelSettings(2, 20, 45, 10, 0.5, 5, 50));
+            FlxG.levels.push(new LevelSettings(2, 20, 40, 10, 0.5, 6, 50));
+            FlxG.levels.push(new LevelSettings(2, 20, 35, 10, 0.5, 7, 100));
 		}
 
 	}

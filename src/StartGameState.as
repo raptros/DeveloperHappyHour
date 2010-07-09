@@ -39,9 +39,10 @@ package
 
         override public function update():void
         {
-            if (FlxG.mouse.justReleased()) 
+            if (FlxG.mouse.justReleased() || FlxG.keys.justPressed("SPACE")) 
             {
                 FlxG.state = new ScoreShowState();
+                    
             }
             super.update();
         }

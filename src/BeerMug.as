@@ -8,11 +8,14 @@ package
      */
     public class BeerMug extends BarThing
     {
-        public static var SIZE:Number = 25;
+        public static var WIDTH:Number = 31;
+        public static var HEIGHT:Number = 25;
 
         private var _full:Boolean;
         public var dropping:Boolean=false;
         public var targetY:Number;
+
+        private var breaking:Boolean=false;
 
         [Embed(source="../build/assets/sprites-mug.png")]
         private var BeerMugSprite:Class;
@@ -23,10 +26,11 @@ package
 
             this.full = full;
 
-            loadGraphic(BeerMugSprite, false, false, SIZE, SIZE);
+            loadGraphic(BeerMugSprite, false, false, WIDTH, HEIGHT);
             addAnimation("idle",[0]);
             addAnimation("fast",[1]);
             addAnimation("empty",[2]);
+            addAnimation("break",[3,4], 4, false);
 
             collideRight = false;
             collideLeft = true;
@@ -41,11 +45,17 @@ package
         {
             if (dropping)
             {
-                if (y <= targetY)
-                    y+=5;
-                else
+                if (y > targetY)
                 {
-                    dropping = false;
+                    velocity.x=0;
+                    velocity.y=0;
+                    acceleration.y=0;
+                    breaking=true;
+                    play("break");
+                }
+                else if (breaking && finished)
+                {
+                    dropping=false;
                     kill();
                 }
             }

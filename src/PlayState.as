@@ -16,11 +16,10 @@ package
         private var mugSpeed:Number = 100;
         
         //points for events
-        private var giveMugPoints:Number = 1;
-        private var collectMugPoints:Number = 2;
-        private var pushOutPatronPoints:Number = 5;
-        private var collectMoneyPoints:Number = 10;
+        private var collectMugPoints:Number = 100;
+        private var collectMoneyPoints:Number = 1500;
     
+        private var pushOutPatronPoints:Number;
         //level settings
         private var maxPatrons:Number;
         private var patronStep:Number; 
@@ -83,6 +82,7 @@ package
             patronGap = ls.patronGap;
             probPatron = ls.probPatron;
             whenMoney = ls.whenMoney;
+            pushOutPatronPoints = ls.ptsPatron
         }
 
         //life counter.
@@ -108,13 +108,13 @@ package
             FlxG.mouse.hide();
 
             //set life count
-            lifeCounter = new FlxText(300, 10, 50, lives.toString());
-            lifeCounter.setFormat(null, 8, 0xffffff, "right");
+            lifeCounter = new FlxText(400, 5, 200, lives.toString());
+            lifeCounter.setFormat(null, 15, 0x2593ff, "right");
             add(lifeCounter);
 
             //display scores
-            scoreDisp = new FlxText(0, 10, 50, FlxG.score.toString());
-            scoreDisp.setFormat(null, 8, 0xffffff, "right");
+            scoreDisp = new FlxText(0, 5, 200, FlxG.score.toString());
+            scoreDisp.setFormat(null, 15, 0x2593ff, "right");
             add(scoreDisp);
 
             //set the countdown for patrons.
@@ -159,7 +159,7 @@ package
                 add(taps[i]);
 
                 tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
-                mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.SIZE, bars[i].top-20);
+                mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.WIDTH, bars[i].top-20);
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 29);
                 
                 //deploy the maximum number of patrons right away.
@@ -192,7 +192,15 @@ package
             //test for frozen (stop animations except for one group, then go to prepare state)
             if (frozen)
             {
-                freezer -= FlxG.elapsed;
+                //finish switching first of all.
+                if (isSwitching)
+                {
+                    player.x = tapperPositions[barNum].x;
+                    player.y = tapperPositions[barNum].y;
+                    isSwitching = false;
+                }
+                else
+                    freezer -= FlxG.elapsed;
                 //once the animation is over, transition to a different state.
                 if (freezer <= 0)
                 {
@@ -277,7 +285,7 @@ package
                 mug.velocity.y = 0;
             }
             //move the player up or down a bar.
-            else if (FlxG.keys.justPressed("UP") && !isFilling)
+            else if (FlxG.keys.justPressed("UP") && !isFilling && !isSwitching)
             {
                 isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
@@ -286,7 +294,7 @@ package
                     barNum = bars.length - 1;
                 player.play("switching");
             }
-            else if (FlxG.keys.justPressed("DOWN")  && !isFilling)
+            else if (FlxG.keys.justPressed("DOWN")  && !isFilling && !isSwitching)
             {
                 isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
@@ -399,9 +407,7 @@ package
             //don't stop the mug if patron's already got one.
             if (patron.inPushBack)
                 return ;
-            //award points and stop patron and mug
-            FlxG.score += giveMugPoints;
-            mugsGiven++;
+        
 
             mug.kill();
             //push back patron, and let it animate. when it finishes, it'll call pushbackComplete
@@ -410,7 +416,14 @@ package
             patron.collideRight = false;
             patron.targetX = patron.x - pushBack;
             patron.play("catch");
-            patron.y += 3;
+            //count mugs.
+            mugsGiven++;
+            if (mugsGiven >= whenMoney)
+            {
+                patron.doBurp = true;
+                mugsGiven = 0;
+            }
+
         }
 
         /**
@@ -449,9 +462,9 @@ package
             pos.x = patron.x;
             pos.y = patron.bottom;
             //check up on dropping money. TODO add animation for patron dropping money.
-            if (mugsGiven >= whenMoney)
+            if (patron.doBurp)
             {
-                mugsGiven = 0;
+                patron.doBurp = false;
                 var money:Money = curMoney.getFirstAvail() as Money;
                 if (!money)
                 {
@@ -466,8 +479,6 @@ package
 
             patron.collideRight = true;
             patron.inPushBack = false;
-            patron.play("walk");
-            patron.y -= 3;
         }
 
         /**
@@ -475,6 +486,8 @@ package
          */
         public function mugDroppedLeft(mug:BeerMug):Boolean
         {
+            if (frozen)
+                return false;
             //prepare for freezing most of the animations.
             frozen = true;
             freezer = 2.0;
@@ -487,11 +500,11 @@ package
             player.play("dropped");
 
             mug.dropping = true;
-            mug.x++;//so it gets back within bounds.
-            mug.targetY = mug.y + 50; //whatever the "height" of the bar is.
-            mug.velocity.x = 0;
-            mug.velocity.y = 0;
-            //mug.play("dropping-full");
+            mug.angle = 315;
+            mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
+            //mug.velocity.x = -30;
+            //mug.velocity.y = 120;
+            mug.acceleration.y=1000;
             if (lives < 0)
                 displayGameOver();
             return false;
@@ -507,6 +520,8 @@ package
                 FlxG.score += collectMugPoints;
                 return true;
             }
+            else if (frozen)
+                return false;
             else
             {
                 //prepare for freezing most of the animations.
@@ -521,11 +536,9 @@ package
                 player.play("dropped");
 
                 mug.dropping = true;
-                mug.x--;//so it gets back within bounds.
-                mug.targetY = mug.y + 50; //whatever the "height" of the bar is.
-                mug.velocity.x = 0;
-                mug.velocity.y = 0;
-                //mug.play("dropping-empty");
+                mug.angle = 45;
+                mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
+                mug.acceleration.y=1000;
 
                 if (lives < 0)
                     displayGameOver();
