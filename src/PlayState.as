@@ -62,10 +62,18 @@ package
         //state flags
         private var isSwitching:Boolean=false;
         private var isFilling:Boolean=false;
+        private var doThrowOut:Boolean=false;
+        private var mugChucked:Boolean=false;
+
+        private var hitHead:Boolean=true;
         
         //displays
         private var lifeCounter:FlxText;
         private var scoreDisp:FlxText;
+
+        //ugh.
+        private var pushingPatron:Patron;
+        private var spinner:SpinningBeer;
 
         private var player:Player;
 
@@ -192,15 +200,81 @@ package
             //test for frozen (stop animations except for one group, then go to prepare state)
             if (frozen)
             {
-                //finish switching first of all.
-                if (isSwitching)
+                //Deal with animation chains.
+                if (isSwitching && !player.finished)
+                {
+                    player.update();
+                }
+                else if (isSwitching)
                 {
                     player.x = tapperPositions[barNum].x;
                     player.y = tapperPositions[barNum].y;
                     isSwitching = false;
+                    player.update();
+                    if (doThrowOut)
+                    {
+                        //do something w/player
+                        player.frame=12;
+                        player.y -= 15;
+                    }
+                }
+                else if (player.isDancing && player.finished)
+                {
+                    player.isDancing = false;
+                    player.x = tapperPositions[barNum].x;
+                    player.y = tapperPositions[barNum].y;
+                    keepUpdating.add(taps[barNum]);
+                    taps[barNum].play("filling");
+                    player.frame=11;
+                    isFilling = true;
+                    player.isDrinking = true;
+                }
+                else if (player.isDrinking && isFilling && taps[barNum].finished)
+                {
+                    taps[barNum].frame = 0;
+                    isFilling = false;
+                    player.isDrinking=true;
+                    player.play("drink");
+
+                }
+                else if (player.isDrinking && !isFilling && player.finished)
+                {
+                    player.isDrinking=false;
+                    //animation after this is mug throwing.
+                    //freezer = 0;
+                    flip = Math.random();
+                    hitHead = flip <= 0.5;
+
+                    mugChucked = true;
+                    spinner = new SpinningBeer(player, hitHead);
+                    add(spinner);
+                    keepUpdating.add(spinner);
+                    player.frame = 0;
+                    player.facing = FlxSprite.LEFT;
+                    spinner.frame=2;
+                }
+                else if (mugChucked && spinner.sNum == SpinningBeer.S_BREAK)
+                {
+                    player.facing = FlxSprite.RIGHT;
+                    if (hitHead)
+                        player.play("dropped");
+                    else 
+                        player.play("kick");
+                    keepUpdating.update();
+                }
+                else if (mugChucked && spinner.done)
+                {
+                    mugChucked = false;
+                    freezer = 0;
                 }
                 else
+                {
+                    if (doThrowOut)
+                        player.x = pushingPatron.x - 5;
                     freezer -= FlxG.elapsed;
+                    if (keepUpdating != null)
+                        keepUpdating.update();
+                }
                 //once the animation is over, transition to a different state.
                 if (freezer <= 0)
                 {
@@ -211,14 +285,15 @@ package
                     else if (patronCount <= 0)
                     {
                         FlxG.level++;
-                        FlxG.state = new PrepareState();
+                        if (FlxG.level < FlxG.levels.length)
+                            FlxG.state = new PrepareState();
+                        else
+                            FlxG.state = new GameOverState();
                     }
                     //life loss situation
                     else
                         FlxG.state = new PrepareState();
                 }
-                if (keepUpdating != null)
-                    keepUpdating.update();
                 return ;
             }
 
@@ -320,10 +395,11 @@ package
             }
 
             //stop the running.
-            if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
+            if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && !isSwitching && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
             {
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
+                player.finished=true;
             }
 
             //IMPORTANT.
@@ -494,6 +570,12 @@ package
             keepUpdating = new FlxGroup();
             keepUpdating.add(player);
             keepUpdating.add(mug);
+            if (isFilling)
+            {
+                taps[barNum].frame = 0;
+                isFilling = false;
+                keepUpdating.add(taps[barNum]);
+            }
 
             //now do animation and game data updates.
             lives--;
@@ -530,6 +612,12 @@ package
                 keepUpdating = new FlxGroup();
                 keepUpdating.add(player);
                 keepUpdating.add(mug);
+                if (isFilling)
+                {
+                    taps[barNum].frame = 0;
+                    isFilling = false;
+                    keepUpdating.add(taps[barNum]);
+                }
 
                 //now do animation and game data updates.
                 lives--;
@@ -551,15 +639,24 @@ package
         */
         public function patronPushedOut(patron:Patron):Boolean
         {
+            if (frozen)
+            {   
+                freezer = 0.5;
+                player.kill();
+                return true;
+            }
             patronCount--;
             FlxG.score += pushOutPatronPoints;
             if (patronCount <= 0)
             {
                 //prepare for freezing most of the animations.
                 frozen = true;
-                freezer = 2.0;
+                freezer = 10.0;
                 keepUpdating = new FlxGroup();
                 keepUpdating.add(player);
+                //get those animation going!
+                player.play("dance");
+                player.isDancing=true;
             }
             return true;
         }
@@ -569,18 +666,48 @@ package
          */
         public function patronAttacks(patron:Patron):Boolean
         {
+            if (frozen)
+                return false;
             //prepare for freezing most of the animations.
             frozen = true;
-            freezer = 2.0;
+            freezer = 10.0;
             keepUpdating = new FlxGroup();
             keepUpdating.add(player);
-            //keepUpdating.add(patron); 
+            keepUpdating.add(patron); 
+            //move the player to where the patron is.
+            if (isFilling)
+            {
+                taps[barNum].frame = 0;
+                isFilling = false;
+                keepUpdating.add(taps[barNum]);
+            }
+            player.facing = FlxSprite.RIGHT;
+            var curBase:FlxPoint = tapperPositions[patron.whichBar];
+            if (barNum != patron.whichBar && player.x != curBase.x && player.y != curBase.y)
+            {
+                isSwitching=true;
+                barNum = patron.whichBar;
+                player.play("switching");
+            }
+            else
+            {
+                player.frame=12;
+                player.y -= 15;
+            }
+            //get ready for throwout anim
+
+            patron.facing = FlxSprite.LEFT;
+            patron.targetX = bars[barNum].x - 5;
+            doThrowOut = true;
+            pushingPatron = patron;
+            patron.deltaX = 2; //speed this way up!
+            
             //now do maintainence.
             lives--;
             //animate interaction between player and patron.
             if (lives < 0)
                 displayGameOver();
-            return true;
+            return false;
         }
 
         /**

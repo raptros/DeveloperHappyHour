@@ -27,7 +27,7 @@ package
         public var drinking:Boolean = false;
         public var doBurp:Boolean = false;
 
-        private var deltaX:Number=1; 
+        public var deltaX:Number=1;
         private var animTime:Number;
 
         private var psi:Number; //Patron Start Index
@@ -41,7 +41,7 @@ package
             super(initX, initY, leftBound, rightBound);
 
             //this is going to have to hold every single patron sprite, the way I see it.
-            loadGraphic(PatronSprite, false, false, WIDTH, HEIGHT);
+            loadGraphic(PatronSprite, false, true, WIDTH, HEIGHT);
             var numPatrons:Number = 1;
             var whichPatron:Number = Math.floor(Math.random() * (numPatrons + 1));
             //psi = whichPatron * lengthSheetPart; 
