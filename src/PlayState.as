@@ -113,7 +113,7 @@ package
             //create bar background
             add(new FlxSprite(0, 0, BarSprite));
 
-            FlxG.mouse.hide();
+            //FlxG.mouse.hide();
 
             //set life count
             lifeCounter = new FlxText(400, 5, 200, lives.toString());
@@ -197,7 +197,10 @@ package
 
         override public function update():void
         {
-            //test for frozen (stop animations except for one group, then go to prepare state)
+            /* --State ending animation runner.--
+                When an event occurs to end the state, the gameplay logic is suspended, and 
+                a specific sequence of animations are run.
+            */
             if (frozen)
             {
                 //Deal with animation chains.
@@ -296,12 +299,12 @@ package
                 }
                 return ;
             }
+            /* --End of EOS animation -- */
 
             //make sure text displays are up to date
             lifeCounter.text = lives.toString();
             scoreDisp.text = FlxG.score.toString();
             
-
             //test for done switching
             if (isSwitching && player.finished)
             {
@@ -320,21 +323,46 @@ package
 
             var pos:FlxPoint;
 
-            //Handle input.
-            if (FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y)
-            { //run the filling animation
+            /* -- Input Handling --
+                deals with keyboard events and mouse events.
+                This lets controls be either keyboard or mouse or even touchscreen.
+            */
+
+            var pressedTapper:Boolean = !isFilling && player.x == curBase.x && player.y == curBase.y && 
+                                            (FlxG.keys.SPACE || (FlxG.mouse.pressed() &&
+                                                taps[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+
+            var releasedTapper:Boolean = isFilling && (FlxG.keys.justReleased("SPACE") || FlxG.mouse.justReleased());
+
+            var canceledTapper:Boolean = isFilling && FlxG.mouse.pressed() && !taps[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y);
+            
+            var choseTapUp:Boolean = !isSwitching && (FlxG.keys.justPressed("UP") || (FlxG.mouse.pressed() && 
+                                                            taps[(barNum + 3) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+
+            var choseTapDown:Boolean = !isSwitching && (FlxG.keys.justPressed("DOWN") || (FlxG.mouse.pressed() && 
+                                                            taps[(barNum + 1) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+
+            var goLeft:Boolean = player.x > curBar.left && (FlxG.keys.LEFT || (FlxG.mouse.pressed() && FlxG.mouse.x < player.x));
+            var goRight:Boolean = player.x < curBase.x && (FlxG.keys.RIGHT || (FlxG.mouse.pressed() && FlxG.mouse.x > player.right));
+
+            //run the filling animation
+            if (pressedTapper) //(FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y)
+            {
                 isFilling=true;
                 taps[barNum].play("filling");
                 player.frame=11;
+                player.facing = FlxSprite.RIGHT;
             }
-            if (isFilling && !taps[barNum].finished && FlxG.keys.justReleased("SPACE"))
-            { //mug didn't fill - player let go of tap too early.
+            //mug didn't fill - player let go of tap too early or canceled.
+            if ((releasedTapper && !taps[barNum].finished) || canceledTapper) //(isFilling && !taps[barNum].finished && FlxG.keys.justReleased("SPACE"))
+            { 
                 player.frame=0;
                 taps[barNum].frame=0;
                 isFilling=false;
             }
-            else if (isFilling && FlxG.keys.justReleased("SPACE"))
-            { //run the throwing animation, and throw a mug.
+            //run the throwing animation, and throw a mug.
+            else if (releasedTapper) //(isFilling && FlxG.keys.justReleased("SPACE"))
+            { 
                 player.play("throwing");
                 taps[barNum].frame=0;
                 isFilling=false;
@@ -359,52 +387,77 @@ package
                 mug.velocity.x = -1*mugSpeed; //send it to the left
                 mug.velocity.y = 0;
             }
-            //move the player up or down a bar.
-            else if (FlxG.keys.justPressed("UP") && !isFilling && !isSwitching)
+            /* Bar movements - these events cancel a filling operation and run some animation.*/
+            //move the player up one bar. The !isSwitching makes it one bar at a time.
+            else if (choseTapUp) //(FlxG.keys.justPressed("UP") && !isSwitching)
             {
+                if (isFilling)
+                {
+                    isFilling = false;
+                    taps[barNum].frame = 0;
+                }
                 isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
-                barNum--;
-                if (barNum < 0)
-                    barNum = bars.length - 1;
+                barNum = (barNum + 3) % 4;
+                /*if (barNum < 0)
+                    barNum = bars.length - 1;*/
                 player.play("switching");
             }
-            else if (FlxG.keys.justPressed("DOWN")  && !isFilling && !isSwitching)
+            //move the player down one bar.
+            else if (choseTapDown) //(FlxG.keys.justPressed("DOWN") && !isSwitching)
             {
+                if (isFilling)
+                {
+                    isFilling = false;
+                    taps[barNum].frame = 0;
+                }
                 isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
-                barNum++;
-                if (barNum >= bars.length)
-                    barNum = 0;
+                barNum = (barNum + 1) % 4;
+                /*if (barNum >= bars.length)
+                    barNum = 0;*/
                 player.play("switching");
             }
-            //move player left or right along bar
-            else if (FlxG.keys.LEFT && player.x > curBar.left && !isFilling)
+            //move player left along bar
+            else if (goLeft) //(FlxG.keys.LEFT && player.x > curBar.left)
             {
+                if (isFilling)
+                {
+                    isFilling = false;
+                    taps[barNum].frame = 0;
+                }
                 player.facing = FlxSprite.RIGHT;
                 player.x -= playerStep;
                 if (!isSwitching)
                     player.play("running");
             }
-            else if (FlxG.keys.RIGHT && player.x < curBase.x && !isFilling)
+            //move player right along bar
+            else if (goRight) //(FlxG.keys.RIGHT && player.x < curBase.x)
             {
+                if (isFilling)
+                {
+                    isFilling = false;
+                    taps[barNum].frame = 0;
+                }
                 player.facing = FlxSprite.LEFT;
                 player.x += playerStep;
                 if (!isSwitching)
                     player.play("running");
             }
 
-            //stop the running.
-            if (!FlxG.keys.LEFT && !FlxG.keys.RIGHT && !isFilling && !isSwitching && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT")))
+            //stops the running.
+            if (!goLeft && !goRight && !isFilling && !isSwitching && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT") || FlxG.mouse.justReleased()))
             {
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
                 player.finished=true;
             }
 
-            //IMPORTANT.
+            /*--IMPORTANT.--*/
             super.update();
                 
+            /* --Overlap/collision detection-- */
+
             //check overlap of player and empty mugs
             FlxU.overlap(player, curMugs, playerMugged);
 
@@ -429,6 +482,9 @@ package
                 curMugs = barMugs[i];
                 curPatrons = barPatrons[i];
 
+                //check for collisions between mugs and patrons
+                FlxU.collide(curMugs, curPatrons);
+
                 //see if we can add a patron at this time.
                 if (patronTime && curPatrons.countLiving() < maxPatrons)
                 {
@@ -440,7 +496,7 @@ package
                         //object that isn't in play. 
                         pos = patronPositions[i];
                         var patron:Patron = curPatrons.getFirstAvail() as Patron;
-                        if (!patron) //I don't think this will ever be run,
+                        /*if (!patron) //I don't think this will ever be true,
                         { // now that maximum patrons for each bar are deployed from the start.
                             //there isn't one available, so make a new one with right props
                             patron = new Patron(pos.x, pos.y, curBar.left, curBar.right);
@@ -453,20 +509,17 @@ package
                             curPatrons.add(patron);
                         }
                         else
-                        {   //get the one we found set up right.
-                            patron.inPushBack = false;
-                            patron.startPos = pos;
-                        }
+                        {*/
+                        //get the one we found set up right.
+                        patron.inPushBack = false;
+                        patron.startPos = pos;
+                        //}
                         //send it along
                         patron.prepare();
                         patronCount++;
                         patron.play("walk");
                     }
                 }
-
-                //check for collisions between mugs and patrons
-                //FlxU.overlap(curMugs, curPatrons, patronMugged);
-                FlxU.collide(curMugs, curPatrons);
             }
 
         }
@@ -483,7 +536,6 @@ package
             //don't stop the mug if patron's already got one.
             if (patron.inPushBack)
                 return ;
-        
 
             mug.kill();
             //push back patron, and let it animate. when it finishes, it'll call pushbackComplete
@@ -492,7 +544,7 @@ package
             patron.collideRight = false;
             patron.targetX = patron.x - pushBack;
             patron.play("catch");
-            //count mugs.
+            //count mugs; is it time to drop money?
             mugsGiven++;
             if (mugsGiven >= whenMoney)
             {
@@ -516,10 +568,9 @@ package
             var curBar:FlxRect = bars[patron.whichBar];
             var curMugs:FlxGroup = barMugs[patron.whichBar];
             var curMoney:FlxGroup = moneyOnBars[patron.whichBar];
-
             var pos:FlxPoint = new FlxPoint(patron.right + 1, mugPositions[patron.whichBar].y)
-            // the only difference between this bit of code and the code for
-            //handling spacebar is the color,placement, and direction of the mug.
+
+            // Same principle as mug generator for filling.
             var mug:BeerMug = curMugs.getFirstAvail() as BeerMug;
             if (!mug)
             {
@@ -537,7 +588,8 @@ package
             
             pos.x = patron.x;
             pos.y = patron.bottom;
-            //check up on dropping money. TODO add animation for patron dropping money.
+
+            //check up on whether or not the patron is supposed to drop money.
             if (patron.doBurp)
             {
                 patron.doBurp = false;
@@ -581,15 +633,15 @@ package
             lives--;
             player.play("dropped");
 
+            //mug should do a little arc before crashing on floor.
             mug.dropping = true;
             mug.angle = 315;
             mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
-            //mug.velocity.x = -30;
-            //mug.velocity.y = 120;
             mug.acceleration.y=1000;
+
             if (lives < 0)
                 displayGameOver();
-            return false;
+            return false;//hang onto the mug
         }
 
         /**
