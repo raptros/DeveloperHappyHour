@@ -17,7 +17,7 @@ package
         [Embed(source="../build/assets/icons-tip.png")]
         private var IconTip:Class;
 
-        private var lifetime:Number=2.0;
+        private var lifetime:Number=1.0;
 
         override public function create():void
         {

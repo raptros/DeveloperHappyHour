@@ -60,6 +60,7 @@
                 </then>
             </elseif>
         </if>
+        <echo>-define=CONFIG::mobile,${mobile}</echo>
 
         <java jar="${FLEX_HOME}/lib/mxmlc.jar" dir="${FLEX_HOME}/frameworks" fork="true" failonerror="true">
             <arg value="${main.src.loc}/${project.name}.as"/>
@@ -76,8 +77,9 @@
             <arg value="-verbose-stacktraces=true"/>
             <arg value="-headless-server=true"/>
             <arg value="-use-network=false"/>
-            <arg value="-default-frame-rate=31"/>
+            <!--<arg value="-default-frame-rate=31"/>-->
             <arg value="-define=CONFIG::mobile,${mobile}"/>
+            <arg value="-define=CONFIG::debugdisp,${debugdisp}"/>
         </java>
 
         <echo>[compile] ${mode.name} SWF ${project.name.versioned}.swf created successfully</echo>

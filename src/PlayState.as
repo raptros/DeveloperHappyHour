@@ -12,6 +12,7 @@ package
         private var BarTap:Class;
 
         //speeds
+        private var speedfactor:Number;
         private var playerStep:Number = 2;
         private var mugSpeed:Number = 100;
         
@@ -43,6 +44,8 @@ package
         private var moneyOnBars:Array;
         //sprites
         private var taps:Array;
+        //objects
+        private var tchs:Array; //touch points for switching.
         //points
         private var tapperPositions:Array;
         private var mugPositions:Array;
@@ -70,6 +73,8 @@ package
         //displays
         private var lifeCounter:FlxText;
         private var scoreDisp:FlxText;
+        private var debugDisp:FlxText;
+        private var mon:FlxMonitor;
 
         //ugh.
         private var pushingPatron:Patron;
@@ -91,6 +96,10 @@ package
             probPatron = ls.probPatron;
             whenMoney = ls.whenMoney;
             pushOutPatronPoints = ls.ptsPatron
+
+            speedfactor = FlxG.scores[2];
+            playerStep *= speedfactor;
+            mugSpeed *= speedfactor
         }
 
         //life counter.
@@ -113,7 +122,7 @@ package
             //create bar background
             add(new FlxSprite(0, 0, BarSprite));
 
-            //FlxG.mouse.hide();
+            FlxG.mouse.hide();
 
             //set life count
             lifeCounter = new FlxText(400, 5, 200, lives.toString());
@@ -125,6 +134,14 @@ package
             scoreDisp.setFormat(null, 15, 0x2593ff, "right");
             add(scoreDisp);
 
+            CONFIG::debugdisp
+            {
+                mon = new FlxMonitor(8);
+                debugDisp = new FlxText(200, 460, 100, "0");
+                debugDisp.setFormat(null, 15, 0x2593ff, "right");
+                add(debugDisp);
+            }
+
             //set the countdown for patrons.
             countDown = patronGap; 
 
@@ -135,6 +152,8 @@ package
             barPatrons = new Array();
             moneyOnBars = new Array();
             taps = new Array();
+            tchs = new Array();
+
             tapperPositions = new Array();
             mugPositions = new Array();
             patronPositions = new Array();
@@ -159,12 +178,18 @@ package
                 
                 moneyOnBars[i] = new FlxGroup();
                 add(moneyOnBars[i]);
-
+                
+                tchs[i] = new FlxObject(bars[i].right+tapOffsets[i], bars[i].top - 40,
+                                        FlxG.width - (bars[i].right+tapOffsets[i]), bars[i].height+40);
+                add(tchs[i]);
+                
                 taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - 40); //+9, -40
                 taps[i].loadGraphic(BarTap, false, false, 62,53);
-                taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], 16, false);
+                taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], 16 * speedfactor , false);
                 taps[i].frame=0;
                 add(taps[i]);
+
+
 
                 tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
                 mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.WIDTH, bars[i].top-20);
@@ -197,6 +222,13 @@ package
 
         override public function update():void
         {
+            //Update the fps meter.
+            CONFIG::debugdisp
+            {
+                mon.add(FlxG.elapsed*1000);
+                debugDisp.text = "" + uint(1000/mon.average());
+                debugDisp.update();
+            }
             /* --State ending animation runner.--
                 When an event occurs to end the state, the gameplay logic is suspended, and 
                 a specific sequence of animations are run.
@@ -330,23 +362,23 @@ package
 
             var pressedTapper:Boolean = !isFilling && player.x == curBase.x && player.y == curBase.y && 
                                             (FlxG.keys.SPACE || (FlxG.mouse.pressed() &&
-                                                taps[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+                                                tchs[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
 
             var releasedTapper:Boolean = isFilling && (FlxG.keys.justReleased("SPACE") || FlxG.mouse.justReleased());
 
-            var canceledTapper:Boolean = isFilling && FlxG.mouse.pressed() && !taps[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y);
+            var canceledTapper:Boolean = isFilling && FlxG.mouse.pressed() && !tchs[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y);
             
             var choseTapUp:Boolean = !isSwitching && (FlxG.keys.justPressed("UP") || (FlxG.mouse.pressed() && 
-                                                            taps[(barNum + 3) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+                                                            tchs[(barNum + 3) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
 
             var choseTapDown:Boolean = !isSwitching && (FlxG.keys.justPressed("DOWN") || (FlxG.mouse.pressed() && 
-                                                            taps[(barNum + 1) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
+                                                            tchs[(barNum + 1) % 4].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
 
             var goLeft:Boolean = player.x > curBar.left && (FlxG.keys.LEFT || (FlxG.mouse.pressed() && FlxG.mouse.x < player.x));
             var goRight:Boolean = player.x < curBase.x && (FlxG.keys.RIGHT || (FlxG.mouse.pressed() && FlxG.mouse.x > player.right));
 
             //run the filling animation
-            if (pressedTapper) //(FlxG.keys.justPressed("SPACE") && player.x == curBase.x && player.y == curBase.y)
+            if (pressedTapper)
             {
                 isFilling=true;
                 taps[barNum].play("filling");
@@ -354,14 +386,14 @@ package
                 player.facing = FlxSprite.RIGHT;
             }
             //mug didn't fill - player let go of tap too early or canceled.
-            if ((releasedTapper && !taps[barNum].finished) || canceledTapper) //(isFilling && !taps[barNum].finished && FlxG.keys.justReleased("SPACE"))
+            if ((releasedTapper && !taps[barNum].finished) || canceledTapper)
             { 
                 player.frame=0;
                 taps[barNum].frame=0;
                 isFilling=false;
             }
             //run the throwing animation, and throw a mug.
-            else if (releasedTapper) //(isFilling && FlxG.keys.justReleased("SPACE"))
+            else if (releasedTapper)
             { 
                 player.play("throwing");
                 taps[barNum].frame=0;
@@ -389,7 +421,7 @@ package
             }
             /* Bar movements - these events cancel a filling operation and run some animation.*/
             //move the player up one bar. The !isSwitching makes it one bar at a time.
-            else if (choseTapUp) //(FlxG.keys.justPressed("UP") && !isSwitching)
+            else if (choseTapUp)
             {
                 if (isFilling)
                 {
@@ -404,7 +436,7 @@ package
                 player.play("switching");
             }
             //move the player down one bar.
-            else if (choseTapDown) //(FlxG.keys.justPressed("DOWN") && !isSwitching)
+            else if (choseTapDown)
             {
                 if (isFilling)
                 {
@@ -419,7 +451,7 @@ package
                 player.play("switching");
             }
             //move player left along bar
-            else if (goLeft) //(FlxG.keys.LEFT && player.x > curBar.left)
+            else if (goLeft)
             {
                 if (isFilling)
                 {
@@ -432,7 +464,7 @@ package
                     player.play("running");
             }
             //move player right along bar
-            else if (goRight) //(FlxG.keys.RIGHT && player.x < curBase.x)
+            else if (goRight)
             {
                 if (isFilling)
                 {
@@ -496,24 +528,10 @@ package
                         //object that isn't in play. 
                         pos = patronPositions[i];
                         var patron:Patron = curPatrons.getFirstAvail() as Patron;
-                        /*if (!patron) //I don't think this will ever be true,
-                        { // now that maximum patrons for each bar are deployed from the start.
-                            //there isn't one available, so make a new one with right props
-                            patron = new Patron(pos.x, pos.y, curBar.left, curBar.right);
-                            patron.pushbackComplete = pushbackComplete;
-                            patron.mugged = patronMugged;
-                            patron.whichBar = i;
-                            patron.onDieLeft = patronPushedOut;
-                            patron.onDieRight = patronAttacks;
-                            patron.moveStep = patronStep;
-                            curPatrons.add(patron);
-                        }
-                        else
-                        {*/
                         //get the one we found set up right.
                         patron.inPushBack = false;
                         patron.startPos = pos;
-                        //}
+            
                         //send it along
                         patron.prepare();
                         patronCount++;
@@ -521,7 +539,6 @@ package
                     }
                 }
             }
-
         }
 
         /**
@@ -637,7 +654,8 @@ package
             mug.dropping = true;
             mug.angle = 315;
             mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
-            mug.acceleration.y=1000;
+            mug.velocity.x /= speedfactor;
+            mug.acceleration.y=1000 * speedfactor;
 
             if (lives < 0)
                 displayGameOver();
@@ -678,7 +696,7 @@ package
                 mug.dropping = true;
                 mug.angle = 45;
                 mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
-                mug.acceleration.y=1000;
+                mug.acceleration.y=1000 * speedfactor;
 
                 if (lives < 0)
                     displayGameOver();

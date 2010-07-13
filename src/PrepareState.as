@@ -22,7 +22,7 @@ package
 
             tapping = new FlxSprite(375, 206);
             tapping.loadGraphic(PrepareImg, true, false, 50, 68);
-            tapping.addAnimation("yoink", [0, 0, 0, 1], 2, false);
+            tapping.addAnimation("yoink", [0, 1], 1, false);
             add(tapping);
             tapping.play("yoink");
         }

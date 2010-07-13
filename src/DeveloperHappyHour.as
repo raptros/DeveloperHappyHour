@@ -11,7 +11,7 @@ package
 
     import org.flixel.*;
 
-    [SWF(width="800", height="480", backgroundColor="#000000", frameRate=30)];
+    [SWF(width="800", height="480", backgroundColor="#000000", frameRate=14)];
     [Frame(factoryClass="Preloader")];
 
     /**
@@ -23,12 +23,13 @@ package
 
 		public function DeveloperHappyHour()
 		{
-            /*CONFIG::mobile
-            {
-                Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
-                FlxG.mobile = true; 
-            }*/
             super(WIDTH, HEIGHT, StartGameState, 1);
+            FlxG.scores[2] = 1.0;
+            CONFIG::mobile {
+                Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+                FlxG.mobile = true;
+                FlxG.scores[2] = 4.0;
+            }
             //this makes it easy ... incrementing FlxG.level to advance through the array.
             //order: maxPatrons, patronStep, pushBack, patronGap, probPatron, whenMoney
             FlxG.levels.push(new LevelSettings(1, 10, 50, 10, 0.4, 3, 50));

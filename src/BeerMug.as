@@ -30,7 +30,7 @@ package
             addAnimation("idle",[0]);
             addAnimation("fast",[1]);
             addAnimation("empty",[2]);
-            addAnimation("break",[3,4], 4, false);
+            addAnimation("break",[3,4], 2, false);
 
             collideRight = false;
             collideLeft = true;
@@ -45,7 +45,7 @@ package
         {
             if (dropping)
             {
-                if (y > targetY)
+                if (y >= targetY)
                 {
                     velocity.x=0;
                     velocity.y=0;

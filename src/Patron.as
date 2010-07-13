@@ -13,6 +13,12 @@ package
         //public static var SIZE:Number = 40;
         public static var lengthSheetPart:Number = 4;
 
+        //statics reping times/speeds
+        private var speedfactor:Number;
+        private var burpTime:Number = 1.0 ;
+        private var drinkTime:Number = 2.5;
+        private var rantTime:Number = 1.0;
+
         [Embed(source="../build/assets/sprites-patrons.png")]
         private var PatronSprite:Class;
 
@@ -20,7 +26,6 @@ package
         public var mugged:Function;
         
         public var moveStep:Number; //how far the patron moves each step.
-
         public var targetX:Number;
         public var inPushBack:Boolean = false;
         public var isAnimating:Boolean = false;
@@ -29,8 +34,8 @@ package
 
         public var deltaX:Number=1;
         private var animTime:Number;
-
         private var psi:Number; //Patron Start Index
+
 
 
 //        public var worth; //how many points this patron is worth.
@@ -40,6 +45,12 @@ package
         {
             super(initX, initY, leftBound, rightBound);
 
+            speedfactor = FlxG.scores[2];
+            burpTime /= speedfactor;
+            drinkTime /= speedfactor;
+            rantTime /= speedfactor;
+            deltaX *= speedfactor;
+
             //this is going to have to hold every single patron sprite, the way I see it.
             loadGraphic(PatronSprite, false, true, WIDTH, HEIGHT);
             var numPatrons:Number = 1;
@@ -48,12 +59,12 @@ package
             psi = 0;
             
             addAnimationCallback(onAnimationChange);
-            addAnimation("walk", [psi + 1, psi, psi, psi, psi, psi+1], 6, true);
-            addAnimation("rant", [psi+2, psi+3], 4, true);
-            addAnimation("catch", [psi+4], 1, true);
-            addAnimation("drink", [psi+5, psi+6, psi+7, psi+8, psi+9], 2, false);
-            addAnimation("drinkBurp", [psi+5, psi+6, psi+7, psi+8, psi+9, psi, psi+10], 2, false);
-            addAnimation("burp", [psi+10, psi], 2, false);
+            addAnimation("walk", [psi + 1, psi, psi, psi, psi, psi+1], 6 * speedfactor, true);
+            addAnimation("rant", [psi+2, psi+3], 4 * speedfactor, true);
+            addAnimation("catch", [psi+4], 1 * speedfactor, true);
+            addAnimation("drink", [psi+5, psi+6, psi+7, psi+8, psi+9], 2 * speedfactor, false);
+            addAnimation("drinkBurp", [psi+5, psi+6, psi+7, psi+8, psi+9, psi, psi+10], 2 * speedfactor, false);
+            addAnimation("burp", [psi+10, psi], 2 * speedfactor, false);
 
             collideLeft = false;
             collideRight = true;
@@ -76,7 +87,7 @@ package
                         {
                             isAnimating = true;
                             targetX = x;
-                            animTime = 1.0;
+                            animTime = burpTime;
                             play("burp");
                         }
                         pushbackComplete(this);
@@ -88,9 +99,9 @@ package
             else 
             {
                 //move to the targetX. if we're there, start animating.
-                if (x > targetX)
+                if (x > targetX && (x - targetX) > deltaX)
                     x -= deltaX;
-                else if (x < targetX)
+                else if (x < targetX && (targetX - x) > deltaX)
                     x += deltaX;
                 else
                 {
@@ -98,13 +109,13 @@ package
                     isAnimating = true;
                     if (inPushBack)
                     {
-                        animTime = 2.5;
+                        animTime = drinkTime;
                         play("drink");
                             
                     }
                     else
                     {
-                        animTime = 1.0;
+                        animTime = rantTime;
                         play("rant");
                     }
                 }
