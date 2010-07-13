@@ -136,7 +136,7 @@ package
                 //deal w/ keyboard input for selecting high score
                 if (FlxG.keys.justPressed("UP"))
                     whichLetter = (whichLetter + 26) % 27;
-                else if (FlxG.keys.justPressed("DOWN"))
+                else if (FlxG.keys.justPressed("DOWN") || (FlxG.mouse.justPressed() && FlxG.mouse.x < 400))
                     whichLetter = (whichLetter + 1) % 27;
                 else if (FlxG.keys.justPressed("LEFT"))
                 {    
@@ -152,7 +152,7 @@ package
                     if (whichLetter < 0)
                         whichLetter = 0;
                 }
-                else if (FlxG.keys.justPressed("SPACE"))
+                else if (FlxG.keys.justPressed("SPACE") || (FlxG.mouse.justPressed() && FlxG.mouse.x > 400))
                 {
                     if (whichInitial < 3)
                     {
