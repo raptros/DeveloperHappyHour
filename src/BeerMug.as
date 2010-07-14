@@ -8,8 +8,7 @@ package
      */
     public class BeerMug extends BarThing
     {
-        public static var WIDTH:Number = 31;
-        public static var HEIGHT:Number = 25;
+        public static var cfg:Class = MeasuresConfig;
 
         private var _full:Boolean;
         public var dropping:Boolean=false;
@@ -26,7 +25,7 @@ package
 
             this.full = full;
 
-            loadGraphic(BeerMugSprite, false, false, WIDTH, HEIGHT);
+            loadGraphic(BeerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
             addAnimation("idle",[0]);
             addAnimation("fast",[1]);
             addAnimation("empty",[2]);

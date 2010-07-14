@@ -24,12 +24,16 @@ package
 		public function DeveloperHappyHour()
 		{
             super(WIDTH, HEIGHT, StartGameState, 1);
+
+            //var cfg:MeasuresConfig = new MeasuresConfig();
+
             FlxG.scores[2] = 1.0;
             CONFIG::mobile {
                 Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
                 FlxG.mobile = true;
                 FlxG.scores[2] = 3.0;
             }
+
             //this makes it easy ... incrementing FlxG.level to advance through the array.
             //order: maxPatrons, patronStep, pushBack, patronGap, probPatron, whenMoney
             FlxG.levels.push(new LevelSettings(1, 10, 50, 10, 0.4, 3, 50));

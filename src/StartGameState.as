@@ -9,6 +9,7 @@ package
     {
         private var title:FlxText;
         private var prompter:FlxText;
+        public var cfg:Class = MeasuresConfig;
 
         [Embed(source="../build/assets/opening_screen.png")]
         private var TitleSprite:Class;
@@ -21,8 +22,8 @@ package
 
             add(new FlxSprite(0,0,TitleSprite));
 
-            var mug:FlxSprite = new FlxSprite(430,151);
-            mug.loadGraphic(BeerMugSprite,true, true, 118,166);
+            var mug:FlxSprite = new FlxSprite(cfg.imgCfg.openMug.x, cfg.imgCfg.openMug.y);
+            mug.loadGraphic(BeerMugSprite,true, true, cfg.imgCfg.openMug.w, cfg.imgCfg.openMug.h);
             mug.addAnimation("fill", [0,1,2,3,4,5,6,7,8,9,10], 5, false);
             add(mug);
 

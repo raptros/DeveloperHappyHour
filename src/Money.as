@@ -7,6 +7,8 @@ package
      */
     public class Money extends BarThing
     {
+        public var cfg:Class = MeasuresConfig;
+
         public static var COLOR:uint=0xff00ff;
         private var lifeTime:Number=10.0;
 
@@ -16,7 +18,7 @@ package
        public function Money(initX:Number, initY:Number, leftBound:Number, rightBound:Number) 
         {
             super(initX, initY, leftBound, rightBound);
-            loadGraphic(MoneySprite, false, false, 27, 13);
+            loadGraphic(MoneySprite, false, false, cfg.moneyCfg.w, cfg.moneyCfg.h);
 
             collideLeft=false;
             collideRight=false;

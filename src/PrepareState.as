@@ -5,6 +5,7 @@ package
     public class PrepareState extends FlxState
     {
         
+        public var cfg:Class = MeasuresConfig;
         [Embed(source="../build/assets/sprites-getready.png")]
         private var PrepareImg:Class;
 
@@ -13,15 +14,15 @@ package
         override public function create():void
         {
             var bg:FlxSprite = new FlxSprite();
-            bg.createGraphic(800, 480);
+            bg.createGraphic(FlxG.width, FlxG.height);
             bg.color=0x002449;
             add(bg);
-            var prompter:FlxText = new FlxText(0, 120, 800, "GET READY TO SERVE");
-            prompter.setFormat(null, 15, 0xdbff00, "center", 0);
+            var prompter:FlxText = new FlxText(0, FlxG.height/4, FlxG.width, "GET READY TO SERVE");
+            prompter.setFormat(null, cfg.fontSize, 0xdbff00, "center", 0);
             add(prompter);
 
-            tapping = new FlxSprite(375, 206);
-            tapping.loadGraphic(PrepareImg, true, false, 50, 68);
+            tapping = new FlxSprite((FlxG.width - cfg.imgCfg.prepImg.width) / 2, (FlxG.height - cfg.imgCfg.prepImg.height)/2);
+            tapping.loadGraphic(PrepareImg, true, false, cfg.imgCfg.prepImg.width, cfg.imgCfg.prepImg.height);
             tapping.addAnimation("yoink", [0, 1], 1, false);
             add(tapping);
             tapping.play("yoink");

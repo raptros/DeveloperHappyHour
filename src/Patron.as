@@ -9,15 +9,17 @@ package
      */
     public class Patron extends BarThing
     {
-        public static var WIDTH:Number = 59, HEIGHT:Number=31;
+        //public static var WIDTH:Number = 59, HEIGHT:Number=31;
         //public static var SIZE:Number = 40;
         public static var lengthSheetPart:Number = 4;
 
+        public static var cfg:Class = MeasuresConfig;
+
         //statics reping times/speeds
         private var speedfactor:Number;
-        private var burpTime:Number = 1.0 ;
-        private var drinkTime:Number = 2.5;
-        private var rantTime:Number = 1.0;
+        private var burpTime:Number;
+        private var drinkTime:Number;
+        private var rantTime:Number;
 
         [Embed(source="../build/assets/sprites-patrons.png")]
         private var PatronSprite:Class;
@@ -46,25 +48,24 @@ package
             super(initX, initY, leftBound, rightBound);
 
             speedfactor = FlxG.scores[2];
-            burpTime /= speedfactor;
-            drinkTime /= speedfactor;
-            rantTime /= speedfactor;
-            deltaX *= speedfactor;
+            burpTime = cfg.patronCfg.burpTime;
+            drinkTime = cfg.patronCfg.drinkTime;
+            rantTime = cfg.patronCfg.rantTime;
+            deltaX  = cfg.patronCfg.deltaX;
 
             //this is going to have to hold every single patron sprite, the way I see it.
-            loadGraphic(PatronSprite, false, true, WIDTH, HEIGHT);
+            loadGraphic(PatronSprite, false, true, cfg.patronCfg.width, cfg.patronCfg.height);
             var numPatrons:Number = 1;
             var whichPatron:Number = Math.floor(Math.random() * (numPatrons + 1));
             //psi = whichPatron * lengthSheetPart; 
             psi = 0;
             
             addAnimationCallback(onAnimationChange);
-            addAnimation("walk", [psi + 1, psi, psi, psi, psi, psi+1], 6 * speedfactor, true);
-            addAnimation("rant", [psi+2, psi+3], 4 * speedfactor, true);
-            addAnimation("catch", [psi+4], 1 * speedfactor, true);
-            addAnimation("drink", [psi+5, psi+6, psi+7, psi+8, psi+9], 2 * speedfactor, false);
-            addAnimation("drinkBurp", [psi+5, psi+6, psi+7, psi+8, psi+9, psi, psi+10], 2 * speedfactor, false);
-            addAnimation("burp", [psi+10, psi], 2 * speedfactor, false);
+            addAnimation("walk", [psi + 1, psi, psi, psi, psi, psi+1], cfg.patronCfg.walkFps, true);
+            addAnimation("rant", [psi+2, psi+3], cfg.patronCfg.rantFps, true);
+            addAnimation("catch", [psi+4], cfg.patronCfg.catchFps, true);
+            addAnimation("drink", [psi+5, psi+6, psi+7, psi+8, psi+9], cfg.patronCfg.drinkFps, false);
+            addAnimation("burp", [psi+10, psi], cfg.patronCfg.burpFps, false);
 
             collideLeft = false;
             collideRight = true;
@@ -126,7 +127,7 @@ package
             if (drinking)
             {
                 if (frame == psi + 9)
-                    y = startPos.y + 3;
+                    y = startPos.y + cfg.patronCfg.correction;
                 else 
                     y = startPos.y;
             }
@@ -163,7 +164,7 @@ package
             y = startPos.y;
             drinking = false
             if (name == "catch")
-                y+=3;
+                y+=cfg.patronCfg.correction;
             else if (name == "drink" || name == "drinkBurp")
             {
                 drinking = true;

@@ -4,6 +4,8 @@ package
 
     public class ScoreShowState extends FlxState
     {
+        public var cfg:Class = MeasuresConfig;
+
         [Embed(source="../build/assets/icons-mug.png")]
         private var IconMug:Class;
         [Embed(source="../build/assets/icons-patron1.png")]
@@ -22,50 +24,33 @@ package
         override public function create():void
         {
             
-            var bgfill:FlxSprite = new FlxSprite(0,0).createGraphic(800,480);
+            var bgfill:FlxSprite = new FlxSprite(0,0).createGraphic(FlxG.width, FlxG.height);
             bgfill.color = 0x002449;
             add(bgfill);
 
-            var prompter:FlxText = new FlxText(0, 80, 800, "CLEAR ALL CUSTOMERS");
-            prompter.setFormat(null, 15, 0xdbff00, "center", 0);
+            var prompter:FlxText = new FlxText(0, cfg.textCfg.prompter.y0, FlxG.width, "CLEAR ALL CUSTOMERS");
+            prompter.setFormat(null, cfg.fontSize, 0xdbff00, "center", 0);
             add(prompter);
 
-            prompter = new FlxText(0, 110, 800, "TO ADVANCE");
-            prompter.setFormat(null, 15, 0xdbff00, "center", 0);
+            prompter = new FlxText(0, cfg.textCfg.prompter.y1, FlxG.width, "TO ADVANCE");
+            prompter.setFormat(null, cfg.fontSize, 0xdbff00, "center", 0);
             add(prompter); 
 
+            var pts:Array = ["100 PTS", "50 PTS", "75 PTS", "100 PTS", "150 PTS", "1500 PTS"];
+            var icons:Array = [IconMug, IconPatron1, IconPatron2, IconPatron3, IconPatron4, IconTip];
+            var ylin:Number;
+
             var scoreLine:FlxText;
+            
+            for (var i:int=0; i < 6; i++)
+            {
+                ylin = cfg.textCfg.ptsLine.yinit + 3*cfg.fontSize*i;
+                scoreLine = new FlxText(0, ylin, cfg.textCfg.ptsLine.w, pts[i]);
+                scoreLine.setFormat(null, cfg.fontSize, 0xdbff00, "right", 0);
+                add(scoreLine);
+                add(new FlxSprite(cfg.imgCfg.strip.x, ylin + cfg.imgCfg.strip.offsets[i], icons[i]));
+            }
 
-            scoreLine = new FlxText(0, 155, 460, "100 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 153, IconMug));
-
-            scoreLine = new FlxText(0, 200, 460, "50 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 193, IconPatron1));
-            
-            scoreLine = new FlxText(0, 245, 460, "75 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 237, IconPatron2));
-            
-            scoreLine = new FlxText(0, 290, 460, "100 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 285, IconPatron3));
-
-            scoreLine = new FlxText(0, 335, 460, "150 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 328, IconPatron4));
-            
-            scoreLine = new FlxText(0, 380, 460, "1500 PTS");
-            scoreLine.setFormat(null, 15, 0xdbff00, "right", 0);
-            add(scoreLine);
-            add(new FlxSprite(340, 387, IconTip));
-            
         }
 
         override public function update():void

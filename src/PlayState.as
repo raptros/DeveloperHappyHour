@@ -11,10 +11,12 @@ package
         [Embed(source="../build/assets/sprites-tap.png")]
         private var BarTap:Class;
 
+        public var cfg:Class = MeasuresConfig;
+
         //speeds
         private var speedfactor:Number;
         private var playerStep:Number = 2;
-        private var mugSpeed:Number = 100;
+        private var mugSpeed:Number;
         
         //points for events
         private var collectMugPoints:Number = 100;
@@ -95,11 +97,11 @@ package
             patronGap = ls.patronGap;
             probPatron = ls.probPatron;
             whenMoney = ls.whenMoney;
-            pushOutPatronPoints = ls.ptsPatron
+            pushOutPatronPoints = ls.ptsPatron;
 
-            speedfactor = FlxG.scores[2];
-            playerStep *= speedfactor;
-            mugSpeed *= speedfactor
+            speedfactor = cfg.speedFactor;
+            playerStep = cfg.playerCfg.step;
+            mugSpeed = cfg.mugCfg.speed;
         }
 
         //life counter.
@@ -125,29 +127,30 @@ package
             FlxG.mouse.hide();
 
             //set life count
-            lifeCounter = new FlxText(400, 5, 200, lives.toString());
-            lifeCounter.setFormat(null, 15, 0x2593ff, "right");
+            lifeCounter = new FlxText(cfg.textCfg.lifeCounter.x, cfg.textCfg.lifeCounter.y, cfg.textCfg.lifeCounter.w, lives.toString());
+            lifeCounter.setFormat(null, cfg.fontSize, 0x2593ff, "right");
             add(lifeCounter);
 
             //display scores
-            scoreDisp = new FlxText(0, 5, 200, FlxG.score.toString());
-            scoreDisp.setFormat(null, 15, 0x2593ff, "right");
+            scoreDisp = new FlxText(cfg.textCfg.scoreDisp.x, cfg.textCfg.scoreDisp.y, cfg.textCfg.scoreDisp.w, FlxG.score.toString());
+            scoreDisp.setFormat(null, cfg.fontSize, 0x2593ff, "right");
             add(scoreDisp);
 
-            CONFIG::debugdisp
+            /*CONFIG::debugdisp
             {
                 mon = new FlxMonitor(8);
                 debugDisp = new FlxText(200, 460, 100, "0");
                 debugDisp.setFormat(null, 15, 0x2593ff, "right");
                 add(debugDisp);
-            }
+            }*/
 
             //set the countdown for patrons.
             countDown = patronGap; 
 
             //arrays that contain information about the bars and their
             //locations and object groups.
-            bars = new Array();
+            //bars = new Array();
+            bars = cfg._bars;
             barMugs = new Array();
             barPatrons = new Array();
             moneyOnBars = new Array();
@@ -158,12 +161,7 @@ package
             mugPositions = new Array();
             patronPositions = new Array();
                         
-            bars[0] = new FlxRect(206, 133, 361, 37);
-            bars[1] = new FlxRect(174, 209, 423, 37);
-            bars[2] = new FlxRect(142, 284, 489, 37);
-            bars[3] = new FlxRect(110, 360, 553, 37);
-
-            var tapOffsets:Array=[5, 7, 5, 5];
+            var tapOffsets:Array = cfg._tapOffsets;
 
             // generate the bar groups and position arrays.
             var pos:FlxPoint;
@@ -179,27 +177,28 @@ package
                 moneyOnBars[i] = new FlxGroup();
                 add(moneyOnBars[i]);
                 
-                tchs[i] = new FlxObject(bars[i].right+tapOffsets[i], bars[i].top - 40,
-                                        FlxG.width - (bars[i].right+tapOffsets[i]), bars[i].height+40);
+                tchs[i] = new FlxObject(bars[i].right+tapOffsets[i], bars[i].top - cfg.tapCfg.vOffset,
+                                        FlxG.width - (bars[i].right+tapOffsets[i]), bars[i].height+cfg.tapCfg.vOffset);
                 add(tchs[i]);
                 
-                taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - 40); //+9, -40
-                taps[i].loadGraphic(BarTap, false, false, 62,53);
-                taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], 16 * speedfactor , false);
+                taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - cfg.tapCfg.vOffset); //+9, -40
+                taps[i].loadGraphic(BarTap, false, false, cfg.tapCfg.width, cfg.tapCfg.height);
+                taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], cfg.tapCfg.animFps, false);
                 taps[i].frame=0;
                 add(taps[i]);
 
 
 
-                tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - 39, bars[i].top - 12);
-                mugPositions[i] = new FlxPoint(bars[i].right - BeerMug.WIDTH, bars[i].top-20);
-                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - 29);
+                tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - cfg.playerCfg.hOffset, bars[i].top - cfg.playerCfg.vOffset);
+                
+                mugPositions[i] = new FlxPoint(bars[i].right - cfg.mugCfg.width, bars[i].top - cfg.mugCfg.hOffset);
+                patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - cfg.patronCfg.vOffset);
                 
                 //deploy the maximum number of patrons right away.
                 for (var p:int = 0; p < maxPatrons; p++)
                 {
                     pos = new FlxPoint(patronPositions[i].x, patronPositions[i].y);
-                    pos.x += p*Patron.WIDTH;
+                    pos.x += p*cfg.patronCfg.width;
                     patron = new Patron(pos.x, pos.y, bars[i].left, bars[i].right);
                     patron.pushbackComplete = pushbackComplete;
                     patron.mugged = patronMugged;
@@ -585,7 +584,7 @@ package
             var curBar:FlxRect = bars[patron.whichBar];
             var curMugs:FlxGroup = barMugs[patron.whichBar];
             var curMoney:FlxGroup = moneyOnBars[patron.whichBar];
-            var pos:FlxPoint = new FlxPoint(patron.right + 1, mugPositions[patron.whichBar].y)
+            var pos:FlxPoint = new FlxPoint(patron.right, mugPositions[patron.whichBar].y)
 
             // Same principle as mug generator for filling.
             var mug:BeerMug = curMugs.getFirstAvail() as BeerMug;
@@ -653,9 +652,9 @@ package
             //mug should do a little arc before crashing on floor.
             mug.dropping = true;
             mug.angle = 315;
-            mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
+            mug.targetY = mug.y + cfg.mugCfg.dropHeight; //whatever the "height" of the bar is.
             mug.velocity.x /= speedfactor;
-            mug.acceleration.y=1000 * speedfactor;
+            mug.acceleration.y = cfg.mugCfg.accel;
 
             if (lives < 0)
                 displayGameOver();
@@ -695,8 +694,8 @@ package
 
                 mug.dropping = true;
                 mug.angle = 45;
-                mug.targetY = mug.y + 40; //whatever the "height" of the bar is.
-                mug.acceleration.y=1000 * speedfactor;
+                mug.targetY = mug.y + cfg.mugCfg.dropHeight; //whatever the "height" of the bar is.
+                mug.acceleration.y = cfg.mugCfg.accel;
 
                 if (lives < 0)
                     displayGameOver();
@@ -770,7 +769,7 @@ package
             patron.targetX = bars[barNum].x - 5;
             doThrowOut = true;
             pushingPatron = patron;
-            patron.deltaX = 2; //speed this way up!
+            patron.deltaX = 2 * patron.deltaX; //speed this way up!
             
             //now do maintainence.
             lives--;

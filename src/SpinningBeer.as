@@ -4,11 +4,13 @@ package
 
     public class SpinningBeer extends FlxSprite
     {
+        public static var cfg:Class = MeasuresConfig;
+
         [Embed(source="../build/assets/sprites-mug.png")]
         private var BeerMugSprite:Class;
 
-        public static var WIDTH:Number = 31;
-        public static var HEIGHT:Number = 25;
+        //public static var WIDTH:Number = 31;
+        //public static var HEIGHT:Number = 25;
         
         public static var S_INIT:Number=0;
         public static var S_MOVEUP:Number=1;
@@ -21,18 +23,22 @@ package
         private var startPt:FlxPoint;
         private var endPt:FlxPoint;
 
+        private var arcHeight:Number;
+
         public function SpinningBeer(playerPos:FlxPoint, hitHead:Boolean=true)
         {
-            startPt = new FlxPoint(playerPos.x + 30, playerPos.y);
-            endPt = new FlxPoint(playerPos.x + 15, playerPos.y - 10);
+            startPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 2), playerPos.y);
+            endPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 4), playerPos.y - (cfg.playerCfg.height / 5));
             if (!hitHead)
             {
-                endPt.x -= 10;
-                endPt.y += 20;
+                endPt.x = playerPos.x + (cfg.playerCfg.width / 12.0);
+                endPt.y = playerPos.y + (cfg.playerCfg.height / 5.0);
             }
 
+            arcHeight = cfg.mugCfg.throwHeight;
+
             super(startPt.x, startPt.y);
-            loadGraphic(BeerMugSprite, false, false, WIDTH, HEIGHT);
+            loadGraphic(BeerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
             addAnimation("breaking", [3,4], 4, false);
             //loadRotatedGraphic(BeerMugSprite, 16, 5);
             
@@ -47,13 +53,13 @@ package
         {
             if (sNum == S_INIT)
             { //get it going!
-                velocity.y = -150;
-                velocity.x = velocity.y * (startPt.x - endPt.x) /(200 + (startPt.y - endPt.y)) ;
+                velocity.y = cfg.mugCfg.throwSpeed;
+                velocity.x = velocity.y * (startPt.x - endPt.x) /(2*arcHeight + (startPt.y - endPt.y)) ;
                 angularVelocity = 2000;
                 sNum = S_MOVEUP;
                 frame = 2;
             }
-            else if (sNum == S_MOVEUP && y <= startPt.y - 100)
+            else if (sNum == S_MOVEUP && y <= startPt.y - arcHeight)
             {   //top of arc.
                 velocity.y = -1*velocity.y;
                 sNum = S_MOVEDOWN

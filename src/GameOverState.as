@@ -8,6 +8,8 @@ package
     public class GameOverState extends FlxState
     {
         
+        public var cfg:Class = MeasuresConfig;
+
         [Embed(source="../build/assets/sprites-gameover.png")]
         private var GOPic:Class;
 
@@ -79,45 +81,51 @@ package
             {
                 score = scores[i];
                 //display the current score.
-                ypos = 100+i*30;
+                ypos = cfg.textCfg.scoreItem.y0 +i*cfg.textCfg.scoreItem.step;
                 //index
-                textItem = new FlxText(200, ypos, 50, (i+1).toString());
-                textItem.setFormat(null, 15, 0x2492ff,"left",0);
+                textItem = new FlxText(cfg.textCfg.scoreItem.x0, ypos, cfg.textCfg.scoreItem.w0, (i+1).toString());
+                textItem.setFormat(null, cfg.fontSize, 0x2492ff,"left",0);
                 add(textItem);
 
                 //initials
-                textItem = new FlxText(250, ypos, 150, score.initials);
+                textItem = new FlxText(cfg.textCfg.scoreItem.x1, ypos, cfg.textCfg.scoreItem.w1, score.initials);
                 if (i == newScorePosition)
                 {
-                    textItem.setFormat(null, 15, 0xFF0000,"left",0);
+                    textItem.setFormat(null, cfg.fontSize, 0xFF0000,"left",0);
                     newScoreInitials = textItem;
                 }
                 else
-                    textItem.setFormat(null, 15, 0x2492ff,"left",0);
+                    textItem.setFormat(null, cfg.fontSize, 0x2492ff,"left",0);
                 add(textItem);
 
                 //score
-                textItem = new FlxText(400, ypos, 200, score.value.toString());
-                textItem.setFormat(null, 15, 0x2492ff,"right",0);
+                textItem = new FlxText(cfg.textCfg.scoreItem.x2, ypos, cfg.textCfg.scoreItem.w2, score.value.toString());
+                textItem.setFormat(null, cfg.fontSize, 0x2492ff,"right",0);
                 add(textItem);
             }
 
             //so a high score was added. throw up the signs telling user how to enter text.
             if (highScored)
             {
-                textItem = new FlxText(0, 40, 800, "ENTER YOUR INITIALS");
-                textItem.setFormat(null, 15, 0xFF0000, "center",0);
+                textItem = new FlxText(0, FlxG.height / 20, FlxG.width, "ENTER YOUR INITIALS");
+                textItem.setFormat(null, cfg.fontSize, 0xFF0000, "center",0);
+                add(textItem);
+                
+                var bottomLine:Number = cfg.textCfg.scoreItem.step * 9 + cfg.textCfg.scoreItem.y0 + cfg.fontSize;
+                var hLowLine:Number = Math.round(bottomLine + (FlxG.height - bottomLine) / 2);
+
+                textItem = new FlxText(0, hLowLine - cfg.fontSize, FlxG.width, "USE JOYSTICK TO SELECT LETTER");
+                textItem.setFormat(null, cfg.fontSize, 0xFF0000, "center",0);
                 add(textItem);
 
-                textItem = new FlxText(0, 418, 800, "USE JOYSTICK TO SELECT LETTER");
-                textItem.setFormat(null, 15, 0xFF0000, "center",0);
+
+                textItem = new FlxText(0, hLowLine + 1, FlxG.width, "USE TAPPER TO ENTER LETTER");
+                textItem.setFormat(null, cfg.fontSize, 0xFF0000, "center",0);
                 add(textItem);
 
-                textItem = new FlxText(0, 434, 800, "USE TAPPER TO ENTER LETTER");
-                textItem.setFormat(null, 15, 0xFF0000, "center",0);
-                add(textItem);
-
-                add(new FlxSprite(70, 92+newScorePosition*30, GOPic));
+                add(new FlxSprite(Math.round((cfg.textCfg.scoreItem.x0 - cfg.imgCfg.goImg.width) / 2),
+                            cfg.textCfg.scoreItem.y0+newScorePosition*cfg.textCfg.scoreItem.step - cfg.imgCfg.goImg.vOffset,
+                            GOPic));
 
             }
             
