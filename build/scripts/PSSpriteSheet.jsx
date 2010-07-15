@@ -37,6 +37,9 @@ function Sheet(sourceLS)
     this.baseLoc = Sheet.baseLocation;
     this.baseName = Sheet.baseName;
     this.opts = Sheet.opts;
+    this.scale = Sheet.scale;
+    this.doScale = Sheet.doScale;
+    this.scaleAmount = Sheet.scaleAmount;
     this.useVariableSpaces = Sheet.useVariableSpaces;
     this.genXML = Sheet.genXML;
     this.saveByExport = Sheet.saveByExport;
@@ -45,6 +48,9 @@ function Sheet(sourceLS)
     this.sourceLS = sourceLS;
     this.name = sourceLS.name;
     this.longName = this.baseName + "-" + this.name;
+
+    if (this.doScale)
+        this.longName = this.longName + "-scale-" + this.scaleAmount;
 
     this.suffix = ".psd";
     if (this.saveByExport)
@@ -100,12 +106,29 @@ function Sheet(sourceLS)
                 //we want to keep the original layer names. Yes, this does exactly that.
                 this.doc.paste().name = layer.name;
                 if (this.useVariableSpaces)
-                    newWidth += (layer.bounds[2] - layer.bounds[0]);
+                    newWidth += (layer.bounds[2] - layer.bounds[0]) * this.scale;
             }
         }
+        
+        this.preLayout();
+
         if (!this.useVariableSpaces)
-            newWidth = sourceLS.artLayers.length * width;
+            newWidth = sourceLS.artLayers.length * this.defWidth;
         this.doc.resizeCanvas(newWidth, this.doc.height, AnchorPosition.TOPLEFT);
+    }
+
+    //does the scaling work.
+    this.preLayout = function()
+    {
+        if (this.doScale)
+        {
+            var newWidth = this.doc.width * this.scale;
+            var newHeight = this.doc.height * this.scale;
+            this.doc.resizeImage(newWidth, newHeight, this.doc.resolution, ResampleMethod.NEARESTNEIGHBOR);
+            this.doc.resizeCanvas(this.doc.width, this.doc.height, AnchorPosition.TOPLEFT);
+        }
+        this.defWidth = this.doc.width; //(sourceLS.bounds[2] - sourceLS.bounds[0]) * this.scale;
+        this.defHeight = this.doc.height; //(sourceLS.bounds[3] - sourceLS.bounds[1]) * this.scale;
     }
 
     //lays out the layers of the spritesheet, logs information
@@ -115,8 +138,6 @@ function Sheet(sourceLS)
         var sourceLS = this.sourceLS;
 
         //used for non-variable spacing mode:
-        this.defWidth = sourceLS.bounds[2] - sourceLS.bounds[0]; 
-        this.defHeight = sourceLS.bounds[3] - sourceLS.bounds[1];
 
         if (this.genXML)
             this.posFile.writeln(indent + sheetString(this));
@@ -129,6 +150,7 @@ function Sheet(sourceLS)
         if (this.genXML)
             this.posFile.writeln(indent + closeSheet());
     }
+
 
     //places the next layer in the new PSD, writes the position and dimensions to the file
     this.moveLayer = function(layer, newX, indent)
@@ -156,8 +178,14 @@ function Sheet(sourceLS)
         }
 
         if (this.genXML)
+        {
+            var xval = x.value;
+            var yval = y.value;
+            var wval = width.value;
+            var hval = height.value;
             this.posFile.writeln(indent +
-                    spriteString(x.value, y.value, width.value, height.value, layer.name));
+                    spriteString(xval, yval, wval, hval, layer.name));
+        }
 
         //update the x position.
         return newX + width;
@@ -199,7 +227,7 @@ function getFormatOpts(sourceDoc)
                         quality: Group \
                         { \
                             orientation: 'row', alignChildren: 'left', \
-                            slide: Slider { minValue: '0', maxValue: '100', value: '60'}\
+                            slide: Slider { minValue: '0', maxValue: '100', value: '60'},\
                             current: EditText { text: '60', characters: '3'}\
                         },\
                     },\
@@ -219,6 +247,13 @@ function getFormatOpts(sourceDoc)
                     xmlCheck: Checkbox { text : 'Generate XML positions file', value: 'true' }, \
                     variablePlacing: RadioButton { text: 'Place sprites using varying spacing', value: 'true'},\
                     constantPlacing: RadioButton { text: 'Place sprites with constant sized areas'}\
+                },\
+                scaleOpts: Panel \
+                { \
+                    orientation: 'row', alignChildren: 'fill', \
+                    text: 'Scale Image?',\
+                    scale: Slider {minValue: '0', maxValue: '100', value: '100'}, \
+                    scCurrent: EditText {text: '100', characters: '3'} \
                 },\
                 locPick: Panel \
                 { \
@@ -265,6 +300,25 @@ function getFormatOpts(sourceDoc)
             dia.info.jpgOpts.quality.current.text = val;
         }
         dia.info.jpgOpts.quality.slide.value = val;
+    }
+
+    //for the scale slider
+    dia.scaleOpts.scale.onChanging = function()
+    {
+        dia.scaleOpts.scCurrent.text = dia.scaleOpts.scale.value;
+    }
+
+    dia.scaleOpts.scale.onChange = dia.scaleOpts.scale.onChanging;
+
+    dia.scaleOpts.scCurrent.onChange = function()
+    {
+        var val = dia.scaleOpts.scCurrent.text;
+        if (isNaN(val))
+        {
+            val = 100;
+            dia.scaleOpts.scCurrent.text = val;
+        }
+        dia.scaleOpts.scale.value = val;
     }
 
     //formats that can be exported to, and their options
@@ -317,6 +371,12 @@ function getFormatOpts(sourceDoc)
                 break;
         }
         Sheet.opts = exportOpts;
+        Sheet.scale = dia.scaleOpts.scale.value / 100.0;
+        Sheet.scaleAmount = dia.scaleOpts.scale.value;
+        if (dia.scaleOpts.scale.value < 100)
+        {
+            Sheet.doScale = true;
+        }
         Sheet.genXML = dia.genOpts.xmlCheck.value;
         Sheet.useVariableSpaces = dia.genOpts.variablePlacing.value;
         return true;
@@ -339,13 +399,26 @@ function main()
     if (!gotOpts)
         return ;
 
+    var count = sourceDoc.layerSets.length;
+    
+    //check that the document has folders.
+    if (count == 0)
+    {
+        Window.alert("This script works on layers that are in folders, but this document does not have any folders. Please add at least one folder of layers before running this script.",
+                "No folders found");
+        return ;
+    }
+
     //find out where to store everything.
     Sheet.baseName = sourceDoc.name.substring(0, sourceDoc.name.lastIndexOf("."));
 
     //text file stores positions of sprites in the sheets.
     if (Sheet.genXML)
     {
-        Sheet.posFile = new File(Sheet.baseLocation + "/" + Sheet.baseName + "-positions.xml", "TEXT");
+        var suffix = "-positions.xml";
+        if (Sheet.doScale)
+            suffix = "-positions-scale-" +Sheet.scaleAmount + ".xml";
+        Sheet.posFile = new File(Sheet.baseLocation + "/" + Sheet.baseName + suffix, "TEXT");
         Sheet.posFile.encoding = "UTF-8";
         with (Sheet.posFile)
         {
@@ -358,13 +431,16 @@ function main()
     var sheet;
     var indent = "    ";
 
+    //displayDialogs = DialogModes.ERROR;
     //loop over each folder, generating sheets.
-    var count = sourceDoc.layerSets.length;
- 	for (var i=0; i < count; i++) 
+    for (var i=0; i < count; i++) 
     {
+        if (!sourceDoc.layerSets[i].visible)
+            continue;
         with (new Sheet(sourceDoc.layerSets[i]))
         {
             createDoc(sourceDoc);
+            //preLayout();
             layout(indent);
             saveOrExport();
             close();
@@ -378,6 +454,7 @@ function main()
             close();
         }
     }
+    //displayDialogs = DialogModes.ALL;
 
 }
 main()
