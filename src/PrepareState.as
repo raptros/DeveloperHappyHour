@@ -6,8 +6,6 @@ package
     {
         
         public var cfg:Class = MeasuresConfig;
-        [Embed(source="../build/assets/sprites-getready.png")]
-        private var PrepareImg:Class;
 
         private var tapping:FlxSprite;
 
@@ -21,8 +19,12 @@ package
             prompter.setFormat(null, cfg.fontSize, 0xdbff00, "center", 0);
             add(prompter);
 
-            tapping = new FlxSprite((FlxG.width - cfg.imgCfg.prepImg.width) / 2, (FlxG.height - cfg.imgCfg.prepImg.height)/2);
-            tapping.loadGraphic(PrepareImg, true, false, cfg.imgCfg.prepImg.width, cfg.imgCfg.prepImg.height);
+            tapping = new FlxSprite((FlxG.width - cfg.imgCfg.prepImg.width) / 2,
+                    (FlxG.height - cfg.imgCfg.prepImg.height)/2);
+
+            tapping.loadGraphic(Resources.prepareImg, 
+                    true, false, cfg.imgCfg.prepImg.width, cfg.imgCfg.prepImg.height);
+
             tapping.addAnimation("yoink", [0, 1], 1, false);
             add(tapping);
             tapping.play("yoink");

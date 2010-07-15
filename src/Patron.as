@@ -9,8 +9,6 @@ package
      */
     public class Patron extends BarThing
     {
-        //public static var WIDTH:Number = 59, HEIGHT:Number=31;
-        //public static var SIZE:Number = 40;
         public static var lengthSheetPart:Number = 4;
 
         public static var cfg:Class = MeasuresConfig;
@@ -20,9 +18,6 @@ package
         private var burpTime:Number;
         private var drinkTime:Number;
         private var rantTime:Number;
-
-        [Embed(source="../build/assets/sprites-patrons.png")]
-        private var PatronSprite:Class;
 
         public var pushbackComplete:Function;
         public var mugged:Function;
@@ -54,7 +49,7 @@ package
             deltaX  = cfg.patronCfg.deltaX;
 
             //this is going to have to hold every single patron sprite, the way I see it.
-            loadGraphic(PatronSprite, false, true, cfg.patronCfg.width, cfg.patronCfg.height);
+            loadGraphic(Resources.patronSprite, false, true, cfg.patronCfg.width, cfg.patronCfg.height);
             var numPatrons:Number = 1;
             var whichPatron:Number = Math.floor(Math.random() * (numPatrons + 1));
             //psi = whichPatron * lengthSheetPart; 

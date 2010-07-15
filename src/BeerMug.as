@@ -16,16 +16,13 @@ package
 
         private var breaking:Boolean=false;
 
-        [Embed(source="../build/assets/sprites-mug.png")]
-        private var BeerMugSprite:Class;
-
         public function BeerMug(initX:Number, initY:Number, leftBound:Number, rightBound:Number, full:Boolean = true)
         {
             super(initX, initY, leftBound, rightBound);
 
             this.full = full;
 
-            loadGraphic(BeerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
+            loadGraphic(Resources.beerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
             addAnimation("idle",[0]);
             addAnimation("fast",[1]);
             addAnimation("empty",[2]);

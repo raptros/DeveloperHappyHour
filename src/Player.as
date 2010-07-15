@@ -6,9 +6,6 @@ package
     {
         public static var cfg:Class = MeasuresConfig;
 
-        [Embed(source="../build/assets/sprites-player.png")]
-        private var BartenderSprite:Class;
-
         public var isDancing:Boolean=false; 
         public var isDrinking:Boolean=false; 
 
@@ -17,7 +14,7 @@ package
             super(pos.x, pos.y);
             var speedfactor:Number = cfg.speedFactor;
 
-            loadGraphic(BartenderSprite, true, true, cfg.playerCfg.width, cfg.playerCfg.height);
+            loadGraphic(Resources.bartenderSprite, true, true, cfg.playerCfg.width, cfg.playerCfg.height);
             addAnimation("standing", [0], 10 , false);
             addAnimation("throwing", [1, 0], cfg.playerCfg.throwFps, false);
             addAnimation("dropped", [2], 1, false);

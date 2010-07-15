@@ -11,7 +11,9 @@ package
 
     import org.flixel.*;
 
+    
     [SWF(width="800", height="480", backgroundColor="#000000", frameRate=30)];
+    //[SWF(width="400", height="240", backgroundColor="#000000", frameRate=30)];
     [Frame(factoryClass="Preloader")];
 
     /**
@@ -20,9 +22,14 @@ package
 	public class DeveloperHappyHour extends FlxGame
 	{
         public static var WIDTH:int = 800, HEIGHT:int = 480;
+        //public static var WIDTH:int = 400, HEIGHT:int = 240;
 
 		public function DeveloperHappyHour()
 		{
+            CONFIG::mobile {
+                WIDTH /= 2;
+                HEIGHT /= 2;
+            }
             super(WIDTH, HEIGHT, StartGameState, 1);
 
             //var cfg:MeasuresConfig = new MeasuresConfig();

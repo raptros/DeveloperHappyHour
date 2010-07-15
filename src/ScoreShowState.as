@@ -5,20 +5,6 @@ package
     public class ScoreShowState extends FlxState
     {
         public var cfg:Class = MeasuresConfig;
-
-        [Embed(source="../build/assets/icons-mug.png")]
-        private var IconMug:Class;
-        [Embed(source="../build/assets/icons-patron1.png")]
-        private var IconPatron1:Class;
-        [Embed(source="../build/assets/icons-patron2.png")]
-        private var IconPatron2:Class;
-        [Embed(source="../build/assets/icons-patron3.png")]
-        private var IconPatron3:Class;
-        [Embed(source="../build/assets/icons-patron4.png")]
-        private var IconPatron4:Class;
-        [Embed(source="../build/assets/icons-tip.png")]
-        private var IconTip:Class;
-
         private var lifetime:Number=1.0;
 
         override public function create():void
@@ -37,7 +23,8 @@ package
             add(prompter); 
 
             var pts:Array = ["100 PTS", "50 PTS", "75 PTS", "100 PTS", "150 PTS", "1500 PTS"];
-            var icons:Array = [IconMug, IconPatron1, IconPatron2, IconPatron3, IconPatron4, IconTip];
+            var icons:Array = [Resources.iconMug, Resources.iconPatron1, Resources.iconPatron2,
+                Resources.iconPatron3, Resources.iconPatron4, Resources.iconTip];
             var ylin:Number;
 
             var scoreLine:FlxText;

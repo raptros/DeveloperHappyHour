@@ -6,9 +6,6 @@ package
     {
         public static var cfg:Class = MeasuresConfig;
 
-        [Embed(source="../build/assets/sprites-mug.png")]
-        private var BeerMugSprite:Class;
-
         //public static var WIDTH:Number = 31;
         //public static var HEIGHT:Number = 25;
         
@@ -38,7 +35,7 @@ package
             arcHeight = cfg.mugCfg.throwHeight;
 
             super(startPt.x, startPt.y);
-            loadGraphic(BeerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
+            loadGraphic(Resources.beerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
             addAnimation("breaking", [3,4], 4, false);
             //loadRotatedGraphic(BeerMugSprite, 16, 5);
             

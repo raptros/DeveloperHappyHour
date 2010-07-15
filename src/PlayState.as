@@ -4,13 +4,6 @@ package
 
     public class PlayState extends FlxState
     {
-        //Assets
-        [Embed(source="../build/assets/bar_background_modded.png")]
-        private var BarSprite:Class;
-
-        [Embed(source="../build/assets/sprites-tap.png")]
-        private var BarTap:Class;
-
         public var cfg:Class = MeasuresConfig;
 
         //speeds
@@ -122,7 +115,7 @@ package
         {
 
             //create bar background
-            add(new FlxSprite(0, 0, BarSprite));
+            add(new FlxSprite(0, 0, Resources.barScreen));
 
             FlxG.mouse.hide();
 
@@ -182,7 +175,7 @@ package
                 add(tchs[i]);
                 
                 taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - cfg.tapCfg.vOffset); //+9, -40
-                taps[i].loadGraphic(BarTap, false, false, cfg.tapCfg.width, cfg.tapCfg.height);
+                taps[i].loadGraphic(Resources.barTapSprite, false, false, cfg.tapCfg.width, cfg.tapCfg.height);
                 taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], cfg.tapCfg.animFps, false);
                 taps[i].frame=0;
                 add(taps[i]);
@@ -249,7 +242,7 @@ package
                     {
                         //do something w/player
                         player.frame=12;
-                        player.y -= 15;
+                        player.y -= cfg.playerCfg.slideOffset;
                     }
                 }
                 else if (player.isDancing && player.finished)
@@ -430,8 +423,6 @@ package
                 isSwitching=true;
                 player.facing = FlxSprite.RIGHT;
                 barNum = (barNum + 3) % 4;
-                /*if (barNum < 0)
-                    barNum = bars.length - 1;*/
                 player.play("switching");
             }
             //move the player down one bar.
@@ -761,7 +752,7 @@ package
             else
             {
                 player.frame=12;
-                player.y -= 15;
+                player.y -= cfg.playerCfg.slideOffset;
             }
             //get ready for throwout anim
 
@@ -806,8 +797,8 @@ package
          */
         public function displayGameOver():void
         {
-            var gameOver:FlxText = new FlxText(0, 440, 800, "GAME OVER");
-            gameOver.setFormat(null, 15, 0xdbff00, "center", 0);
+            var gameOver:FlxText = new FlxText(0, FlxG.height * 11 / 12, FlxG.width, "GAME OVER");
+            gameOver.setFormat(null, cfg.fontSize, 0xdbff00, "center", 0);
             add(gameOver);
             if (keepUpdating != null)
                 keepUpdating.add(gameOver);

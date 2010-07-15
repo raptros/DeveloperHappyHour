@@ -11,19 +11,14 @@ package
         private var prompter:FlxText;
         public var cfg:Class = MeasuresConfig;
 
-        [Embed(source="../build/assets/opening_screen.png")]
-        private var TitleSprite:Class;
-
-        [Embed(source="../build/assets/sprites-opening-screen.png")]
-        private var BeerMugSprite:Class;
-
         override public function create():void
         {
 
-            add(new FlxSprite(0,0,TitleSprite));
+            add(new FlxSprite(0,0, Resources.titleScreen));
 
             var mug:FlxSprite = new FlxSprite(cfg.imgCfg.openMug.x, cfg.imgCfg.openMug.y);
-            mug.loadGraphic(BeerMugSprite,true, true, cfg.imgCfg.openMug.w, cfg.imgCfg.openMug.h);
+            mug.loadGraphic(Resources.openingAnimationSprite,
+                true, true, cfg.imgCfg.openMug.w, cfg.imgCfg.openMug.h);
             mug.addAnimation("fill", [0,1,2,3,4,5,6,7,8,9,10], 5, false);
             add(mug);
 

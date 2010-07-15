@@ -10,9 +10,6 @@ package
         
         public var cfg:Class = MeasuresConfig;
 
-        [Embed(source="../build/assets/sprites-gameover.png")]
-        private var GOPic:Class;
-
         private var over:FlxText;
         private var saved:FlxSave;
         private var scores:Array;
@@ -125,7 +122,7 @@ package
 
                 add(new FlxSprite(Math.round((cfg.textCfg.scoreItem.x0 - cfg.imgCfg.goImg.width) / 2),
                             cfg.textCfg.scoreItem.y0+newScorePosition*cfg.textCfg.scoreItem.step - cfg.imgCfg.goImg.vOffset,
-                            GOPic));
+                            Resources.iconGameOver));
 
             }
             
