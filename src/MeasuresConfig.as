@@ -67,7 +67,7 @@ package
                 tapCfg = {
                     width   : 31, //62
                     height  : 27, //53
-                    animFps :  8, //16
+                    animFps :  8 * speedFactor, //16
                     vOffset : 20  //40
                 };
                 moneyCfg = {w: 14, h: 7}; //27, 13

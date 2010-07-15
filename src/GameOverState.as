@@ -78,7 +78,7 @@ package
             {
                 score = scores[i];
                 //display the current score.
-                ypos = cfg.textCfg.scoreItem.y0 +i*cfg.textCfg.scoreItem.step;
+                ypos = cfg.textCfg.scoreItem.y0 +i*cfg.textCfg.scoreItem.s;
                 //index
                 textItem = new FlxText(cfg.textCfg.scoreItem.x0, ypos, cfg.textCfg.scoreItem.w0, (i+1).toString());
                 textItem.setFormat(null, cfg.fontSize, 0x2492ff,"left",0);
@@ -108,7 +108,7 @@ package
                 textItem.setFormat(null, cfg.fontSize, 0xFF0000, "center",0);
                 add(textItem);
                 
-                var bottomLine:Number = cfg.textCfg.scoreItem.step * 9 + cfg.textCfg.scoreItem.y0 + cfg.fontSize;
+                var bottomLine:Number = cfg.textCfg.scoreItem.s * 9 + cfg.textCfg.scoreItem.y0 + cfg.fontSize;
                 var hLowLine:Number = Math.round(bottomLine + (FlxG.height - bottomLine) / 2);
 
                 textItem = new FlxText(0, hLowLine - cfg.fontSize, FlxG.width, "USE JOYSTICK TO SELECT LETTER");
@@ -121,7 +121,7 @@ package
                 add(textItem);
 
                 add(new FlxSprite(Math.round((cfg.textCfg.scoreItem.x0 - cfg.imgCfg.goImg.width) / 2),
-                            cfg.textCfg.scoreItem.y0+newScorePosition*cfg.textCfg.scoreItem.step - cfg.imgCfg.goImg.vOffset,
+                            cfg.textCfg.scoreItem.y0+newScorePosition*cfg.textCfg.scoreItem.s - cfg.imgCfg.goImg.vOffset,
                             Resources.iconGameOver));
 
             }
@@ -141,7 +141,7 @@ package
                 //deal w/ keyboard input for selecting high score
                 if (FlxG.keys.justPressed("UP"))
                     whichLetter = (whichLetter + 26) % 27;
-                else if (FlxG.keys.justPressed("DOWN") || (FlxG.mouse.justPressed() && FlxG.mouse.x < 400))
+                else if (FlxG.keys.justPressed("DOWN") || (FlxG.mouse.justPressed() && FlxG.mouse.x < FlxG.width / 2))
                     whichLetter = (whichLetter + 1) % 27;
                 else if (FlxG.keys.justPressed("LEFT"))
                 {    
@@ -157,7 +157,7 @@ package
                     if (whichLetter < 0)
                         whichLetter = 0;
                 }
-                else if (FlxG.keys.justPressed("SPACE") || (FlxG.mouse.justPressed() && FlxG.mouse.x > 400))
+                else if (FlxG.keys.justPressed("SPACE") || (FlxG.mouse.justPressed() && FlxG.mouse.x > FlxG.width / 2))
                 {
                     if (whichInitial < 3)
                     {
