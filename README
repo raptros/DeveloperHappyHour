@@ -1,0 +1,8 @@
+DeveloperHappyHour is a clone of the old Tapper/RootBeerTapper game. It is written in flash, and uses Flixel.
+It has two versions: desktop and mobile. Once you've made copied build.template.properties to build.properties,
+   and have set up all of the paths appropriately, setting the mobile flag to true and building will give you the
+   mobile version, which has shrunken graphics and touchscreen settings.
+   You can deploy the mobile version to android using ant deploy-to-phone with your phone plugged in.
+
+This project is licensed under the MIT license: see LICENSE for details.
+This project was written by Aidan Coyne - see credits for more information.

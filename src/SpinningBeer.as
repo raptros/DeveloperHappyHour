@@ -24,8 +24,14 @@ package
 
         public function SpinningBeer(playerPos:FlxPoint, hitHead:Boolean=true)
         {
-            startPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 2), playerPos.y);
-            endPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 4), playerPos.y - (cfg.playerCfg.height / 5));
+            //figure out the start and end positions relative to the player.
+            startPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 2), 
+                    playerPos.y);
+
+            endPt = new FlxPoint(playerPos.x + (cfg.playerCfg.width / 4),
+                    playerPos.y - (cfg.playerCfg.height / 5));
+            
+            //modify positions if the ending is not hit head
             if (!hitHead)
             {
                 endPt.x = playerPos.x + (cfg.playerCfg.width / 12.0);
@@ -37,8 +43,6 @@ package
             super(startPt.x, startPt.y);
             loadGraphic(Resources.beerMugSprite, false, false, cfg.mugCfg.width, cfg.mugCfg.height);
             addAnimation("breaking", [3,4], 4, false);
-            //loadRotatedGraphic(BeerMugSprite, 16, 5);
-            
         }
 
         public function get done():Boolean
@@ -46,31 +50,41 @@ package
             return sNum == S_DONE;
         }
 
+        /**
+         * update is a state machine. there are 5 states.
+         */
         override public function update():void
         {
+            //init state - set up the velocities.
             if (sNum == S_INIT)
             { //get it going!
                 velocity.y = cfg.mugCfg.throwSpeed;
-                velocity.x = velocity.y * (startPt.x - endPt.x) /(2*arcHeight + (startPt.y - endPt.y)) ;
+                //the endpoint x must be reached at the same time that the endpoint y is reached.
+                //this calculates v_x in v_x / v_y = delta_x / delta_y;
+                velocity.x = velocity.y * (startPt.x - endPt.x) / (2*arcHeight + (startPt.y - endPt.y)) ;
                 angularVelocity = 2000;
                 sNum = S_MOVEUP;
                 frame = 2;
             }
+            //end of move up state - top of arc has been reached
             else if (sNum == S_MOVEUP && y <= startPt.y - arcHeight)
-            {   //top of arc.
+            {   //so start moving down
                 velocity.y = -1*velocity.y;
                 sNum = S_MOVEDOWN
 
             }
+            //end of move down state - endpoint has been reached
             else if (sNum == S_MOVEDOWN && y >= endPt.y)
             {
-                //break.
+                //stop the mug here
                 velocity.x  = 0;
                 velocity.y = 0;
                 angularVelocity = 0;
+                //and break the mug
                 sNum = S_BREAK;
                 play("breaking");
             }
+            //break animation is done. kill mug and finish.
             else if (sNum == S_BREAK && finished)
             {
                 sNum = S_DONE;

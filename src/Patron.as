@@ -154,6 +154,9 @@ package
                 mugged(c, this);
         }
 
+        /**
+         * corrects position and sets flags as the animation cycle proceeds.
+         */
         public function onAnimationChange(name:String, fNum:uint, fIdx:uint):void
         {
             y = startPos.y;

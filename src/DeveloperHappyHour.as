@@ -1,3 +1,7 @@
+/**
+ * Written by Aidan Coyne, working at Roundarch, in summer 2010.
+ * See license in project root.
+ */
 package  
 {
 

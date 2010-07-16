@@ -2,6 +2,11 @@ package
 {
     import org.flixel.*;
 
+    /**
+     * Contains all of the embedded images, both full sized and scaled down versions.
+     * has accessor functions for these images that return the image appropriate for the
+     * type of build (mobile or desktop)
+     */
     public class Resources
     {
         //Full Sized

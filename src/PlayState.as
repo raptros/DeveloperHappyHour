@@ -129,20 +129,10 @@ package
             scoreDisp.setFormat(null, cfg.fontSize, 0x2593ff, "right");
             add(scoreDisp);
 
-            /*CONFIG::debugdisp
-            {
-                mon = new FlxMonitor(8);
-                debugDisp = new FlxText(200, 460, 100, "0");
-                debugDisp.setFormat(null, 15, 0x2593ff, "right");
-                add(debugDisp);
-            }*/
-
             //set the countdown for patrons.
             countDown = patronGap; 
 
-            //arrays that contain information about the bars and their
-            //locations and object groups.
-            //bars = new Array();
+            //arrays that contain information about the bars and their locations and object groups.
             bars = cfg._bars;
             barMugs = new Array();
             barPatrons = new Array();
@@ -170,21 +160,24 @@ package
                 moneyOnBars[i] = new FlxGroup();
                 add(moneyOnBars[i]);
                 
+                //position the bar-switch and tap-pull touch areas
                 tchs[i] = new FlxObject(bars[i].right+tapOffsets[i], bars[i].top - cfg.tapCfg.vOffset,
                                         FlxG.width - (bars[i].right+tapOffsets[i]), bars[i].height+cfg.tapCfg.vOffset);
                 add(tchs[i]);
                 
+                //position the tap sprites
                 taps[i] = new FlxSprite(bars[i].right+tapOffsets[i], bars[i].top - cfg.tapCfg.vOffset); //+9, -40
                 taps[i].loadGraphic(Resources.barTapSprite, false, false, cfg.tapCfg.width, cfg.tapCfg.height);
                 taps[i].addAnimation("filling", [1,2,3,4,5,6,7,8], cfg.tapCfg.animFps, false);
+                taps[i].addAnimation("highlight", [9], 1, false);
                 taps[i].frame=0;
                 add(taps[i]);
 
-
-
+                //where the player starts when getting to a bar
                 tapperPositions[i] = new FlxPoint(bars[i].right + tapOffsets[i] - cfg.playerCfg.hOffset, bars[i].top - cfg.playerCfg.vOffset);
-                
+                //initial positions for mugs
                 mugPositions[i] = new FlxPoint(bars[i].right - cfg.mugCfg.width, bars[i].top - cfg.mugCfg.hOffset);
+                //inital positions for patrons
                 patronPositions[i] = new FlxPoint(bars[i].left, bars[i].top - cfg.patronCfg.vOffset);
                 
                 //deploy the maximum number of patrons right away.
@@ -209,42 +202,42 @@ package
             
             player = new Player(tapperPositions[0]);
             add(player);
+            
+            //highlight surrounding taps
+            taps[(barNum + 1) % 4].play("highlight");
+            taps[(barNum + 3) % 4].play("highlight");
 
         }
 
         override public function update():void
         {
-            //Update the fps meter.
-            CONFIG::debugdisp
-            {
-                mon.add(FlxG.elapsed*1000);
-                debugDisp.text = "" + uint(1000/mon.average());
-                debugDisp.update();
-            }
             /* --State ending animation runner.--
                 When an event occurs to end the state, the gameplay logic is suspended, and 
                 a specific sequence of animations are run.
             */
             if (frozen)
-            {
-                //Deal with animation chains.
+            {   // deal with chained animations.
+                //first, let the switch animation be completed
                 if (isSwitching && !player.finished)
                 {
                     player.update();
                 }
+                //and move onto the next part of the animation once that's done
                 else if (isSwitching)
                 {
                     player.x = tapperPositions[barNum].x;
                     player.y = tapperPositions[barNum].y;
                     isSwitching = false;
                     player.update();
+                    //because the throwout animation will sometimes start with switching
                     if (doThrowOut)
                     {
-                        //do something w/player
+                        //prepare player for sliding animation
                         player.frame=12;
                         player.y -= cfg.playerCfg.slideOffset;
                     }
                 }
+                //victory animation part 1 - victory dance - finished
                 else if (player.isDancing && player.finished)
                 {
                     player.isDancing = false;
@@ -256,6 +249,7 @@ package
                     isFilling = true;
                     player.isDrinking = true;
                 }
+                //victory animation part 2 - filling mug - finished
                 else if (player.isDrinking && isFilling && taps[barNum].finished)
                 {
                     taps[barNum].frame = 0;
@@ -264,15 +258,16 @@ package
                     player.play("drink");
 
                 }
+                //victory animation part 3 - taking a drink - finished
                 else if (player.isDrinking && !isFilling && player.finished)
                 {
                     player.isDrinking=false;
-                    //animation after this is mug throwing.
-                    //freezer = 0;
-                    flip = Math.random();
+                    //start up animation for mug chucking
+                    flip = Math.random(); //decide which ending it will have
                     hitHead = flip <= 0.5;
 
                     mugChucked = true;
+                    //get that spining beer onto the screen
                     spinner = new SpinningBeer(player, hitHead);
                     add(spinner);
                     keepUpdating.add(spinner);
@@ -280,8 +275,10 @@ package
                     player.facing = FlxSprite.LEFT;
                     spinner.frame=2;
                 }
+                //victory animation part 4 - mug chuck - just as breaking
                 else if (mugChucked && spinner.sNum == SpinningBeer.S_BREAK)
-                {
+                {   
+                    //have the player do the correct response for the ending
                     player.facing = FlxSprite.RIGHT;
                     if (hitHead)
                         player.play("dropped");
@@ -289,13 +286,17 @@ package
                         player.play("kick");
                     keepUpdating.update();
                 }
+                //victory animation is complete
                 else if (mugChucked && spinner.done)
                 {
                     mugChucked = false;
                     freezer = 0;
                 }
+                //when not at a state boundary, keep updating the animations
                 else
                 {
+                    //keep the player right in front of the patron if it's that
+                    //animation
                     if (doThrowOut)
                         player.x = pushingPatron.x - 5;
                     freezer -= FlxG.elapsed;
@@ -323,13 +324,13 @@ package
                 }
                 return ;
             }
-            /* --End of EOS animation -- */
+            /* --End of ending animations-- */
 
             //make sure text displays are up to date
             lifeCounter.text = lives.toString();
             scoreDisp.text = FlxG.score.toString();
             
-            //test for done switching
+            //get back to normal once switching is finished
             if (isSwitching && player.finished)
             {
                 player.x = tapperPositions[barNum].x;
@@ -337,7 +338,6 @@ package
                 isSwitching = false;
                 player.frame=0;
             }
-
 
             //get references from the arrays.
             var curBar:FlxRect = bars[barNum];
@@ -352,6 +352,7 @@ package
                 This lets controls be either keyboard or mouse or even touchscreen.
             */
 
+            //figure out what needs to be done based on input and constraints.
             var pressedTapper:Boolean = !isFilling && player.x == curBase.x && player.y == curBase.y && 
                                             (FlxG.keys.SPACE || (FlxG.mouse.pressed() &&
                                                 tchs[barNum].overlapsPoint(FlxG.mouse.x, FlxG.mouse.y)));
@@ -411,64 +412,44 @@ package
                 mug.velocity.x = -1*mugSpeed; //send it to the left
                 mug.velocity.y = 0;
             }
-            /* Bar movements - these events cancel a filling operation and run some animation.*/
-            //move the player up one bar. The !isSwitching makes it one bar at a time.
-            else if (choseTapUp)
+            /* Bar movements - these actions cancel a filling operation and run some animation.*/
+            else if (choseTapUp || choseTapDown || goLeft || goRight)
             {
                 if (isFilling)
                 {
                     isFilling = false;
                     taps[barNum].frame = 0;
                 }
-                isSwitching=true;
-                player.facing = FlxSprite.RIGHT;
-                barNum = (barNum + 3) % 4;
-                player.play("switching");
-            }
-            //move the player down one bar.
-            else if (choseTapDown)
-            {
-                if (isFilling)
+                //switch bars up or down
+                if (choseTapUp || choseTapDown)
                 {
-                    isFilling = false;
-                    taps[barNum].frame = 0;
-                }
-                isSwitching=true;
-                player.facing = FlxSprite.RIGHT;
-                barNum = (barNum + 1) % 4;
-                /*if (barNum >= bars.length)
-                    barNum = 0;*/
-                player.play("switching");
-            }
-            //move player left along bar
-            else if (goLeft)
-            {
-                if (isFilling)
-                {
-                    isFilling = false;
-                    taps[barNum].frame = 0;
-                }
-                player.facing = FlxSprite.RIGHT;
-                player.x -= playerStep;
-                if (!isSwitching)
-                    player.play("running");
-            }
-            //move player right along bar
-            else if (goRight)
-            {
-                if (isFilling)
-                {
-                    isFilling = false;
-                    taps[barNum].frame = 0;
-                }
-                player.facing = FlxSprite.LEFT;
-                player.x += playerStep;
-                if (!isSwitching)
-                    player.play("running");
-            }
+                    //dehighlight taps.
+                    taps[(barNum + 1) % 4].frame = 0;
+                    taps[(barNum + 3) % 4].frame = 0;
 
+                    //find bar up or down one.
+                    barNum = choseTapUp ? (barNum + 3) % 4 : (barNum + 1) % 4;
+
+                    //highlight surrounding taps
+                    taps[(barNum + 1) % 4].play("highlight");
+                    taps[(barNum + 3) % 4].play("highlight");
+
+                    player.facing = FlxSprite.RIGHT;
+                    isSwitching = true;
+                    player.play("switching")
+                }
+                //run left or right
+                else
+                {
+                    // don't do this animation if switching
+                    if (!isSwitching)
+                        player.play("running");
+                    player.facing = goLeft ? FlxSprite.RIGHT : FlxSprite.LEFT; //decide which way to face
+                    goLeft ? player.x -= playerStep : player.x += playerStep; //decide which way to move the player.
+                }
+            }
             //stops the running.
-            if (!goLeft && !goRight && !isFilling && !isSwitching && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT") || FlxG.mouse.justReleased()))
+            else if (!isFilling && !isSwitching && (FlxG.keys.justReleased("LEFT") || FlxG.keys.justReleased("RIGHT") || FlxG.mouse.justReleased()))
             {
                 player.facing = FlxSprite.RIGHT;
                 player.frame = 0;
@@ -562,12 +543,9 @@ package
         }
 
         /**
-         * Callback from Patron for when it's done being pushed back,
-         * i.e. the movements and animations are completed.
-         * This function sends out an empty mug from the patron,
-         * and sends the patron back towards the edge.
-         * Note that a patron can be killed before this gets called -
-         * if the patron gets pushed out of the bar.
+         * Callback from Patron for when it's done being pushed back, i.e. the movements and animations are completed.
+         * This function sends out an empty mug from the patron, and sends the patron back towards the edge.
+         * Note that a patron can be killed before this gets called - if the patron gets pushed out of the bar.
          */
         public function pushbackComplete(patron:Patron):void
         {
@@ -617,24 +595,30 @@ package
         }
 
         /**
-         * always lose in this case.
+         * callback from a mug falling off left end of bar - always lose in this case.
          */
         public function mugDroppedLeft(mug:BeerMug):Boolean
         {
+            //if already frozen, don't do anything.
             if (frozen)
                 return false;
-            //prepare for freezing most of the animations.
+            //prepare the freeze
             frozen = true;
-            freezer = 2.0;
+            freezer = 1.0;
             keepUpdating = new FlxGroup();
             keepUpdating.add(player);
             keepUpdating.add(mug);
+
+            //stop the filling animation - otherwise the overlay will stick around and look weird
             if (isFilling)
             {
                 taps[barNum].frame = 0;
                 isFilling = false;
                 keepUpdating.add(taps[barNum]);
             }
+            //dehighlight taps.
+            taps[(barNum + 1) % 4].frame = 0;
+            taps[(barNum + 3) % 4].frame = 0;
 
             //now do animation and game data updates.
             lives--;
@@ -653,31 +637,38 @@ package
         }
 
         /**
-         * only lose if player isn't at that bar.
+         * callback from a beermug hitting the right end of the bar 
+         * if the player is in position to catch it, then it won't fall off
          */
         public function mugDroppedRight(mug:BeerMug):Boolean
         {
-            if (barNum == mug.whichBar)
+            if (barNum == mug.whichBar && player.x >= mug.x)
             {
+                //increase the score and kill the mug
                 FlxG.score += collectMugPoints;
                 return true;
             }
+            //ignore callback if freeze is already in effect
             else if (frozen)
                 return false;
             else
             {
-                //prepare for freezing most of the animations.
+                //prepare the freeze
                 frozen = true;
-                freezer = 2.0;
+                freezer = 1.0;
                 keepUpdating = new FlxGroup();
                 keepUpdating.add(player);
                 keepUpdating.add(mug);
+                //stop the filling animation - otherwise the overlay will stick around and look weird
                 if (isFilling)
                 {
                     taps[barNum].frame = 0;
                     isFilling = false;
                     keepUpdating.add(taps[barNum]);
                 }
+                //dehighlight taps.
+                taps[(barNum + 1) % 4].frame = 0;
+                taps[(barNum + 3) % 4].frame = 0;
 
                 //now do animation and game data updates.
                 lives--;
@@ -695,25 +686,33 @@ package
         }
 
         /**
-        * never causes lose. it is a good thing.
-        */
+         * Callback from patron that hits the left edge of the bar. 
+         * during gameplay, this is a good thing. during the freeze
+         * it means the pushout animation is nearly done
+         */
         public function patronPushedOut(patron:Patron):Boolean
         {
+            //finish up the pushout animation
             if (frozen)
             {   
                 freezer = 0.5;
                 player.kill();
                 return true;
             }
+            //decrease the patron count and award points
             patronCount--;
             FlxG.score += pushOutPatronPoints;
+            //the level has been cleared, run the victory animation
             if (patronCount <= 0)
             {
-                //prepare for freezing most of the animations.
+                //prepare for freeze
                 frozen = true;
                 freezer = 10.0;
                 keepUpdating = new FlxGroup();
                 keepUpdating.add(player);
+                //dehighlight taps.
+                taps[(barNum + 1) % 4].frame = 0;
+                taps[(barNum + 3) % 4].frame = 0;
                 //get those animation going!
                 player.play("dance");
                 player.isDancing=true;
@@ -722,49 +721,55 @@ package
         }
 
         /**
-         * always lose in this case.
+         * callback from patron hitting right end of bar, which
+         * is like losing a mug. runs the push out animation
          */
         public function patronAttacks(patron:Patron):Boolean
         {
+            //don't do anything during the freeze
             if (frozen)
                 return false;
-            //prepare for freezing most of the animations.
+            //prepare for the  freeze
             frozen = true;
             freezer = 10.0;
             keepUpdating = new FlxGroup();
             keepUpdating.add(player);
             keepUpdating.add(patron); 
-            //move the player to where the patron is.
+            //stop the flling animation if it's running
             if (isFilling)
             {
                 taps[barNum].frame = 0;
                 isFilling = false;
                 keepUpdating.add(taps[barNum]);
             }
+            //dehighlight taps.
+            taps[(barNum + 1) % 4].frame = 0;
+            taps[(barNum + 3) % 4].frame = 0;
+            //figure out where the patron is
             player.facing = FlxSprite.RIGHT;
             var curBase:FlxPoint = tapperPositions[patron.whichBar];
+            //move the player to that bar and position if neccesary
             if (barNum != patron.whichBar && player.x != curBase.x && player.y != curBase.y)
             {
                 isSwitching=true;
                 barNum = patron.whichBar;
                 player.play("switching");
             }
+            //otherwise just get ready for the animation
             else
             {
                 player.frame=12;
                 player.y -= cfg.playerCfg.slideOffset;
             }
-            //get ready for throwout anim
-
+            //get the patron ready for the animation
             patron.facing = FlxSprite.LEFT;
             patron.targetX = bars[barNum].x - 5;
             doThrowOut = true;
             pushingPatron = patron;
             patron.deltaX = 2 * patron.deltaX; //speed this way up!
             
-            //now do maintainence.
+            //lose a life
             lives--;
-            //animate interaction between player and patron.
             if (lives < 0)
                 displayGameOver();
             return false;
