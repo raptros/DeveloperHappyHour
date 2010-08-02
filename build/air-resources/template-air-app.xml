@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<application xmlns="http://ns.adobe.com/air/application/2.0">
+    <id>@package@</id>
+    <filename>@project@</filename>
+    <name>@project@</name>
+    <version>@version@</version>
+    <initialWindow>
+        <content>swfs/@projectversion@.swf</content>
+        <visible>true</visible>
+        <resizable>true</resizable>
+        <minimizable>true</minimizable> 
+        <maximizable>true</maximizable>
+        <width>@width@</width>
+        <height>@height@</height>
+    </initialWindow>
+</application>

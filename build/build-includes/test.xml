@@ -30,37 +30,63 @@
 
     <!-- Compiles TestRunner.mxml as a SWF -->
     <target name="build">
+        <if>
+            <equals arg1="air" arg2="${compile.platform}" casesensitive="false"/>
+            <then>
+                <java jar="${FLEX_HOME}/lib/mxmlc.jar" dir="${FLEX_HOME}/frameworks" fork="true" failonerror="true">
+                    <arg value="+configname=air"/>
+                    <arg value="${test.src.loc}/${project.name}TestApp.mxml"/>
+                    <arg value="-source-path=${main.src.loc}"/>
 
-        <java jar="${FLEX_HOME}/lib/mxmlc.jar" dir="${FLEX_HOME}/frameworks" fork="true" failonerror="true">
-            <arg value="${test.src.loc}/${project.name}TestApp.mxml"/>
-            <arg value="-source-path=${main.src.loc}"/>
+                    <arg value="-output=${bin.loc}/TestRunner.swf"/>
+                    <arg value="-default-size=148,148"/>
+                    <arg value="-default-background-color=0x320401"/>
 
-            <arg value="-output=${bin.loc}/TestRunner.swf"/>
-            <arg value="-default-size=148,148"/>
-            <arg value="-default-background-color=0x320401"/>
+                    <!-- Include classes from SWCs in this folder, but only the ones we use. -->
+                    <arg value="-library-path+=${lib.loc}"/>
 
-            <!-- Include classes from SWCs in this folder, but only the ones we use. -->
-            <arg value="-library-path+=${lib.loc}"/>
+                    <!-- So true. -->
+                    <arg value="-incremental=true"/>
+                    <arg value="-verbose-stacktraces=true"/>
+                    <arg value="-headless-server=true"/>
+                </java>
+            </then>
+            <else>
+                <java jar="${FLEX_HOME}/lib/mxmlc.jar" dir="${FLEX_HOME}/frameworks" fork="true" failonerror="true">
+                    <arg value="${test.src.loc}/${project.name}TestApp.mxml"/>
+                    <arg value="-source-path=${main.src.loc}"/>
 
-            <!-- So true. -->
-            <arg value="-incremental=true"/>
-            <arg value="-verbose-stacktraces=true"/>
-            <arg value="-headless-server=true"/>
-        </java>
+                    <arg value="-output=${bin.loc}/TestRunner.swf"/>
+                    <arg value="-default-size=148,148"/>
+                    <arg value="-default-background-color=0x320401"/>
+
+                    <!-- Include classes from SWCs in this folder, but only the ones we use. -->
+                    <arg value="-library-path+=${lib.loc}"/>
+
+                    <!-- So true. -->
+                    <arg value="-incremental=true"/>
+                    <arg value="-verbose-stacktraces=true"/>
+                    <arg value="-headless-server=true"/>
+                </java>
+            </else>
+        </if>
+
         <echo>TestRunner built.</echo>
     </target>
 
 
     <!-- Execute TestRunner.swf as FlexUnit tests and publish reports -->
     <target name="exec" depends="build">
-        <flexunit swf="${basedir}/bin/TestRunner.swf"
-                  toDir="${report.loc}"
-                  haltonfailure="false"
-                  verbose="true"
-                  localTrusted="true"
-                  failureproperty="flexunit.failed"
-                  timeout="5000"
-                />
+        <flexunit 
+            swf="${basedir}/bin/TestRunner.swf"
+            toDir="${report.loc}"
+            haltonfailure="false"
+            verbose="true"
+            localTrusted="true"
+            failureproperty="flexunit.failed"
+            timeout="5000"
+            />
+        <!--<property name="test.player" value="flash"/>-->
     </target>
 
     <!--Generate and display test results-->
@@ -76,10 +102,14 @@
         <if>
             <equals arg1="${os.name}" arg2="Mac OS X"/>
             <then>
-                <antcall target="local-run-mac"/>
+                <exec executable="open">
+                    <arg line="-a ${browser} file://${report.url}"/>
+                </exec>
             </then>
             <else>
-                <antcall target="local-run-pc"/>
+                <exec executable="${browser}">
+                    <arg line="file://${report.url}"/>
+                </exec>
             </else>
         </if>
 
@@ -96,17 +126,5 @@
                 <echo>Tests completed -- passed.</echo>
             </else>
         </if>
-    </target>
-
-    <target name="local-run-pc">
-        <exec executable="${browser}">
-            <arg line="file://${report.url}"/>
-        </exec>
-    </target>
-
-    <target name="local-run-mac">
-        <exec executable="open">
-            <arg line="-a ${browser} file://${report.url}"/>
-        </exec>
     </target>
 </project>
